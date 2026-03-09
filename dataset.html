@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>The Dataset — Global Instrument Atlas</title>
+  <title>The Dataset — String Instrument Database</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -619,27 +619,12 @@
 
   <div class="page-header">
     <span class="overline">The Data</span>
-    <h1>Instrument<br/><em>Database</em></h1>
+    <h1>String Instrument<br/><em>Database</em></h1>
     <p>Browse the full instrument database, explore its structure, and understand the variables and coding decisions behind the dataset.</p>
   </div>
 
   <main class="dataset-page">
 
-    <!-- STATS STRIP -->
-    <div class="intro-strip reveal">
-      <div class="intro-cell">
-        <div class="cell-num">200+</div>
-        <div class="cell-label">Instruments Catalogued</div>
-      </div>
-      <div class="intro-cell">
-        <div class="cell-num">38</div>
-        <div class="cell-label">Variables per Entry</div>
-      </div>
-      <div class="intro-cell">
-        <div class="cell-num">14</div>
-        <div class="cell-label">Countries Represented</div>
-      </div>
-    </div>
 
     <!-- ═══════════════════════════════════════════
          LIVE EMBED SECTION
@@ -653,48 +638,14 @@
 
       <div class="embed-intro reveal">
         <p>
-          The complete instrument database is accessible below. Use the built-in filters and search to explore entries by region, instrument family, string count, tuning type, and more.
+          The complete instrument database is accessible below. 
         </p>
       </div>
 
-      <!-- TOGGLE between live embed and screenshot view -->
-      <div class="view-toggle reveal">
-        <button class="toggle-btn active" id="btn-embed" onclick="showEmbed()">Live View</button>
-        <button class="toggle-btn" id="btn-screenshots" onclick="showScreenshots()">Screenshot View</button>
-      </div>
+    
 
-      <div class="iframe-wrapper reveal" id="iframe-wrapper">
-        <!--
-          ═══════════════════════════════════════════
-          PASTE YOUR DATABASE URL HERE
-          Works with: Airtable (shared view), Google Sheets (published),
-          Notion (published page), or any publicly embeddable URL.
 
-          Example Airtable:
-            src="https://airtable.com/embed/shrXXXXXXXX"
-
-          Example Google Sheets:
-            src="https://docs.google.com/spreadsheets/d/YOUR_ID/pubhtml?widget=true"
-
-          Example Notion:
-            src="https://your-workspace.notion.site/your-page-id"
-          ═══════════════════════════════════════════
-        -->
-        <iframe
-          src=""
-          id="db-iframe"
-          allowfullscreen
-          title="Instrument Database">
-        </iframe>
-
-        <!-- Shown automatically if iframe src is empty or fails to load -->
-        <div class="iframe-fallback" id="iframe-fallback">
-          <p>No embed URL set — switch to Screenshot View or add your database URL to the iframe src above.</p>
-        </div>
-      </div>
-
-    </div>
-
+   
     <!-- ═══════════════════════════════════════════
          SCREENSHOT SECTION
          Replace the .screenshot-placeholder divs with real <img> tags
