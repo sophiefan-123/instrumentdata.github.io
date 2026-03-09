@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Visualizations — Global Instrument Atlas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1a1208;
+      --parchment: #f5f0e8;
+      --aged: #e8dfc8;
+      --sienna: #8b4513;
+      --gold: #c8922a;
+      --rust: #a0522d;
+      --sage: #5c6b4a;
+      --cream: #faf7f0;
+      --border: #c4b99a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Crimson Pro', Georgia, serif;
+      background: var(--cream);
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.75;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse at 10% 20%, rgba(200,146,42,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse at 90% 80%, rgba(139,69,19,0.04) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: var(--ink);
+      border-bottom: 2px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 3rem;
+      height: 60px;
+    }
+
+    .nav-brand {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--aged);
+      text-decoration: none;
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 0; right: 0;
+      height: 1px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transition: transform 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--gold); }
+    .nav-links a:hover::after,
+    .nav-links a.active::after { transform: scaleX(1); }
+    .nav-links a.active { color: var(--gold); }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      padding: 140px 2rem 60px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 1;
+    }
+
+    .page-header .overline {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .page-header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      font-weight: 300;
+      color: var(--ink);
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+
+    .page-header h1 em {
+      font-style: italic;
+      color: var(--sienna);
+    }
+
+    .page-header p {
+      max-width: 600px;
+      margin: 0 auto;
+      font-size: 1rem;
+      color: #5a4a36;
+    }
+
+    /* ── TOC ── */
+    .toc {
+      position: relative;
+      z-index: 1;
+      background: var(--parchment);
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 3rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .toc-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--border);
+    }
+
+    .toc a {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--sienna);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .toc a:hover { color: var(--ink); }
+
+    /* ── VISUALIZATION BLOCKS ── */
+    .viz-page {
+      position: relative;
+      z-index: 1;
+    }
+
+    .viz-block {
+      padding: 6rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .viz-block:nth-child(even) {
+      background: var(--parchment);
+    }
+
+    .viz-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .viz-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .viz-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 4rem;
+      font-weight: 300;
+      color: var(--border);
+      line-height: 1;
+    }
+
+    .viz-head {
+      flex: 1;
+    }
+
+    .viz-head .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+
+    .viz-head h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 300;
+      color: var(--ink);
+      line-height: 1.15;
+      margin: 0;
+    }
+
+    .viz-head h2 em {
+      font-style: italic;
+      color: var(--sienna);
+    }
+
+    /* ── TABLEAU EMBED ── */
+    .tableau-container {
+      width: 100%;
+      margin: 2.5rem 0;
+      border: 1px solid var(--border);
+      position: relative;
+    }
+
+    .tableau-placeholder {
+      background: var(--aged);
+      min-height: 500px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 3rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tableau-placeholder::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 39px,
+        rgba(200,146,42,0.08) 39px,
+        rgba(200,146,42,0.08) 40px
+      ), repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 39px,
+        rgba(200,146,42,0.08) 39px,
+        rgba(200,146,42,0.08) 40px
+      );
+    }
+
+    .tableau-placeholder .embed-icon {
+      font-size: 2.5rem;
+      position: relative;
+    }
+
+    .tableau-placeholder .embed-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--sienna);
+      position: relative;
+    }
+
+    .tableau-placeholder .embed-hint {
+      font-size: 0.9rem;
+      color: var(--rust);
+      max-width: 400px;
+      line-height: 1.5;
+      position: relative;
+    }
+
+    .embed-code-hint {
+      position: relative;
+      background: rgba(26,18,8,0.06);
+      border: 1px dashed var(--border);
+      padding: 0.75rem 1.25rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--sienna);
+      max-width: 500px;
+      word-break: break-all;
+    }
+
+    /* ── VIZ TEXT ── */
+    .viz-text-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3.5rem;
+      align-items: start;
+    }
+
+    .viz-text-layout.full-width {
+      grid-template-columns: 1fr;
+    }
+
+    .viz-text h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: var(--ink);
+    }
+
+    .viz-text p {
+      font-size: 0.98rem;
+      color: #3d3020;
+      line-height: 1.85;
+      margin-bottom: 1rem;
+    }
+
+    .viz-text p:last-child { margin-bottom: 0; }
+
+    .viz-findings {
+      border-left: 3px solid var(--gold);
+      padding-left: 1.25rem;
+      margin-top: 1rem;
+    }
+
+    .viz-findings p {
+      font-style: italic;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.05rem;
+    }
+
+    /* ── REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(25px);
+      transition: opacity 0.7s, transform 0.7s;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--ink);
+      color: var(--border);
+      text-align: center;
+      padding: 2.5rem;
+      border-top: 2px solid var(--gold);
+      position: relative;
+      z-index: 1;
+    }
+
+    footer p {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--border);
+      margin: 0;
+    }
+
+    footer a {
+      color: var(--gold);
+      text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+      nav { padding: 0 1.5rem; }
+      .nav-links { gap: 1.5rem; }
+      .viz-text-layout { grid-template-columns: 1fr; }
+      .viz-meta { flex-direction: column; gap: 0.5rem; }
+      .toc { padding: 1rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="nav-brand" href="index.html">Global Instrument Atlas</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="visualizations.html" class="active">Visualizations</a></li>
+      <li><a href="bibliography.html">Bibliography</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-header">
+    <span class="overline">Data Visualizations</span>
+    <h1>Patterns in<br/><em>Global Organology</em></h1>
+    <p>Four interactive Tableau visualizations exploring instrument properties, geographic distribution, and cross-cultural patterns in the dataset.</p>
+  </div>
+
+  <div class="toc">
+    <span class="toc-label">Jump to —</span>
+    <a href="#viz1">I. String Distribution</a>
+    <a href="#viz2">II. Tuning Patterns</a>
+    <a href="#viz3">III. Geographic Map</a>
+    <a href="#viz4">IV. Comparative Analysis</a>
+  </div>
+
+  <main class="viz-page">
+
+    <!-- VIZ 1 -->
+    <div class="viz-block" id="viz1">
+      <div class="viz-inner">
+        <div class="viz-meta reveal">
+          <div class="viz-num">I</div>
+          <div class="viz-head">
+            <span class="section-label">Visualization 01 — Chordophones</span>
+            <h2>String Count <em>Distribution</em><br/>Across Regions</h2>
+          </div>
+        </div>
+
+        <!-- Tableau Embed — Replace this block with your Tableau embed code -->
+        <div class="tableau-container reveal">
+          <div class="tableau-placeholder">
+            <div class="embed-icon">📊</div>
+            <div class="embed-title">Tableau Visualization 1</div>
+            <p class="embed-hint">Replace this placeholder with your Tableau Public embed code. Paste the &lt;script&gt; tag from Tableau Public's Share menu below.</p>
+            <div class="embed-code-hint">&lt;!-- Paste Tableau embed &lt;script&gt; here --&gt;</div>
+          </div>
+          <!-- 
+            TO EMBED TABLEAU:
+            1. Publish your viz to Tableau Public
+            2. Click Share → Embed Code
+            3. Paste the <script> tag here, replacing the placeholder above
+            Example:
+            <script type='text/javascript' src='https://public.tableau.com/javascripts/api/viz_v1.js'></script>
+            <div class='tableauPlaceholder' style='width:100%;height:527px'>
+              <object class='tableauViz' width='100%' height='527' style='display:none;'>
+                <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' />
+                <param name='name' value='YourVizName/Sheet1' />
+              </object>
+            </div>
+          -->
+        </div>
+
+        <div class="viz-text-layout reveal">
+          <div class="viz-text">
+            <h3>Overview</h3>
+            <p>
+              [Write your analysis here.] This visualization examines the distribution of string counts across chordophone instruments represented in the database. Instruments are grouped by regional origin and ordered by string count, revealing patterns in how different traditions approach polyphonic potential.
+            </p>
+            <p>
+              The data suggests notable clustering at certain string counts — particularly at 3, 5, and 12 strings — across geographically unrelated traditions, raising questions about acoustic optimality versus cultural transmission.
+            </p>
+          </div>
+          <div class="viz-text">
+            <h3>Key Findings</h3>
+            <div class="viz-findings">
+              <p>
+                [Add your interpretation here.] Instruments from Southeast Asian traditions show a markedly higher variance in string count compared to West African instruments, which cluster tightly around lower counts.
+              </p>
+            </div>
+            <p style="margin-top:1rem;">
+              This pattern may reflect differing conceptions of melodic versus harmonic function, or may trace historical lineages of instrument development through trade contact.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- VIZ 2 -->
+    <div class="viz-block" id="viz2">
+      <div class="viz-inner">
+        <div class="viz-meta reveal">
+          <div class="viz-num">II</div>
+          <div class="viz-head">
+            <span class="section-label">Visualization 02 — Tuning Systems</span>
+            <h2>Tuning <em>Patterns</em> and<br/>Scale Systems</h2>
+          </div>
+        </div>
+
+        <div class="tableau-container reveal">
+          <div class="tableau-placeholder">
+            <div class="embed-icon">📊</div>
+            <div class="embed-title">Tableau Visualization 2</div>
+            <p class="embed-hint">Replace this placeholder with your Tableau Public embed code.</p>
+            <div class="embed-code-hint">&lt;!-- Paste Tableau embed &lt;script&gt; here --&gt;</div>
+          </div>
+        </div>
+
+        <div class="viz-text-layout reveal">
+          <div class="viz-text">
+            <h3>Overview</h3>
+            <p>
+              [Write your analysis here.] Tuning systems across the database were categorized into broad typologies: equal temperament, just intonation, pentatonic frameworks, and region-specific microtonal systems. This chart displays the frequency and distribution of each typology.
+            </p>
+            <p>
+              Particular attention is paid to how instruments in cross-cultural contact zones — such as the Silk Road corridor and trans-Atlantic trade regions — exhibit hybrid tuning characteristics.
+            </p>
+          </div>
+          <div class="viz-text">
+            <h3>Key Findings</h3>
+            <div class="viz-findings">
+              <p>
+                [Add your interpretation here.] Pentatonic frameworks appear in instruments spanning every continent, yet the specific intervals employed differ substantially — suggesting convergent design rather than common ancestry.
+              </p>
+            </div>
+            <p style="margin-top:1rem;">
+              The data challenges assumptions about Western equal temperament as a universal norm, underscoring the rich diversity of intonation practices still in active use globally.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- VIZ 3 -->
+    <div class="viz-block" id="viz3">
+      <div class="viz-inner">
+        <div class="viz-meta reveal">
+          <div class="viz-num">III</div>
+          <div class="viz-head">
+            <span class="section-label">Visualization 03 — Geography</span>
+            <h2>Geographic <em>Distribution</em><br/>of Instrument Families</h2>
+          </div>
+        </div>
+
+        <div class="tableau-container reveal">
+          <div class="tableau-placeholder">
+            <div class="embed-icon">🗺</div>
+            <div class="embed-title">Tableau Map Visualization</div>
+            <p class="embed-hint">Replace this placeholder with your Tableau Public map embed code.</p>
+            <div class="embed-code-hint">&lt;!-- Paste Tableau embed &lt;script&gt; here --&gt;</div>
+          </div>
+        </div>
+
+        <div class="viz-text-layout reveal">
+          <div class="viz-text">
+            <h3>Overview</h3>
+            <p>
+              [Write your analysis here.] This interactive map plots each instrument in the database according to its primary geographic region of origin, color-coded by Hornbostel-Sachs classification family. Clusters reveal both the density of documentation efforts and genuine concentrations of particular instrument types.
+            </p>
+          </div>
+          <div class="viz-text">
+            <h3>Methodological Note</h3>
+            <div class="viz-findings">
+              <p>
+                [Add your interpretation here.] Geographic assignment reflects the instrument's region of cultural origin, not current distribution. Diaspora instruments (e.g., instruments carried through the transatlantic slave trade) are annotated separately.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- VIZ 4 -->
+    <div class="viz-block" id="viz4">
+      <div class="viz-inner">
+        <div class="viz-meta reveal">
+          <div class="viz-num">IV</div>
+          <div class="viz-head">
+            <span class="section-label">Visualization 04 — Comparative</span>
+            <h2>Multi-Variable <em>Comparison</em><br/>Across Traditions</h2>
+          </div>
+        </div>
+
+        <div class="tableau-container reveal">
+          <div class="tableau-placeholder">
+            <div class="embed-icon">📊</div>
+            <div class="embed-title">Tableau Visualization 4</div>
+            <p class="embed-hint">Replace this placeholder with your Tableau Public embed code.</p>
+            <div class="embed-code-hint">&lt;!-- Paste Tableau embed &lt;script&gt; here --&gt;</div>
+          </div>
+        </div>
+
+        <div class="viz-text-layout reveal">
+          <div class="viz-text">
+            <h3>Overview</h3>
+            <p>
+              [Write your analysis here.] The final visualization brings together multiple instrument variables — string count, tuning type, resonator material, and ensemble context — into a single comparative dashboard, allowing users to filter and explore relationships between these properties.
+            </p>
+            <p>
+              This view is particularly useful for testing hypotheses about correlations between acoustic properties and cultural context.
+            </p>
+          </div>
+          <div class="viz-text">
+            <h3>Key Findings</h3>
+            <div class="viz-findings">
+              <p>
+                [Add your interpretation here.] A strong correlation emerges between resonator material (gourd vs. wood vs. metal) and the prevalence of drone strings, suggesting that acoustic properties of resonators influence the structural development of instruments over time.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>
+      Global Instrument Atlas &nbsp;·&nbsp; A Digital Humanities Project &nbsp;·&nbsp;
+      <a href="index.html">Home</a> &nbsp;·&nbsp;
+      <a href="bibliography.html">Bibliography</a>
+    </p>
+  </footer>
+
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.08 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>

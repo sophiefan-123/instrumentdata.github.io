@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Global Instrument Atlas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1a1208;
+      --parchment: #f5f0e8;
+      --aged: #e8dfc8;
+      --sienna: #8b4513;
+      --gold: #c8922a;
+      --rust: #a0522d;
+      --sage: #5c6b4a;
+      --cream: #faf7f0;
+      --border: #c4b99a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Crimson Pro', Georgia, serif;
+      background: var(--cream);
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.75;
+    }
+
+    /* ── ORNAMENTAL BACKGROUND ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse at 10% 20%, rgba(200,146,42,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 90% 80%, rgba(139,69,19,0.05) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAVIGATION ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: var(--ink);
+      border-bottom: 2px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 3rem;
+      height: 60px;
+    }
+
+    .nav-brand {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--aged);
+      text-decoration: none;
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 0; right: 0;
+      height: 1px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transition: transform 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--gold); }
+    .nav-links a:hover::after,
+    .nav-links a.active::after { transform: scaleX(1); }
+    .nav-links a.active { color: var(--gold); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 2rem 80px;
+      overflow: hidden;
+    }
+
+    .hero-decoration {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      border: 1px solid rgba(200,146,42,0.15);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: rotate 60s linear infinite;
+    }
+
+    .hero-decoration::before {
+      content: '';
+      position: absolute;
+      inset: 40px;
+      border-radius: 50%;
+      border: 1px solid rgba(200,146,42,0.1);
+    }
+
+    .hero-decoration::after {
+      content: '';
+      position: absolute;
+      inset: 80px;
+      border-radius: 50%;
+      border: 1px dashed rgba(200,146,42,0.08);
+    }
+
+    @keyframes rotate { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+    .hero-overline {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 1s 0.3s forwards;
+    }
+
+    .hero h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3.5rem, 8vw, 7rem);
+      font-weight: 300;
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+      opacity: 0;
+      animation: fadeUp 1s 0.5s forwards;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--sienna);
+    }
+
+    .hero-subtitle {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.1rem, 2vw, 1.4rem);
+      font-weight: 300;
+      font-style: italic;
+      color: var(--rust);
+      margin-bottom: 3rem;
+      opacity: 0;
+      animation: fadeUp 1s 0.7s forwards;
+    }
+
+    .hero-divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 3rem;
+      opacity: 0;
+      animation: fadeUp 1s 0.9s forwards;
+    }
+
+    .hero-divider span {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--border);
+    }
+
+    .divider-line {
+      flex: 1;
+      max-width: 80px;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .hero-desc {
+      max-width: 560px;
+      font-size: 1.05rem;
+      color: #4a3d2e;
+      line-height: 1.9;
+      opacity: 0;
+      animation: fadeUp 1s 1.1s forwards;
+      margin-bottom: 3rem;
+    }
+
+    .hero-cta {
+      display: inline-block;
+      padding: 0.85rem 2.5rem;
+      background: var(--sienna);
+      color: var(--cream);
+      text-decoration: none;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      border: none;
+      transition: background 0.2s, transform 0.2s;
+      opacity: 0;
+      animation: fadeUp 1s 1.3s forwards;
+    }
+
+    .hero-cta:hover {
+      background: var(--ink);
+      transform: translateY(-2px);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── ORNAMENTAL RULE ── */
+    .ornament {
+      text-align: center;
+      font-size: 1.2rem;
+      color: var(--gold);
+      letter-spacing: 0.5em;
+      margin: 1rem 0;
+    }
+
+    /* ── SECTIONS ── */
+    section {
+      position: relative;
+      z-index: 1;
+    }
+
+    .section-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 300;
+      line-height: 1.1;
+      margin-bottom: 2rem;
+      color: var(--ink);
+    }
+
+    h2 em { color: var(--sienna); font-style: italic; }
+
+    p { margin-bottom: 1.4rem; color: #3d3020; }
+
+    /* ── ABOUT SECTION ── */
+    #about {
+      background: var(--parchment);
+      padding: 6rem 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: start;
+      margin-top: 3rem;
+    }
+
+    .about-image-col {
+      position: relative;
+    }
+
+    .decorative-frame {
+      position: relative;
+      padding: 1.5rem;
+    }
+
+    .decorative-frame::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 40px; height: 40px;
+      border-top: 2px solid var(--gold);
+      border-left: 2px solid var(--gold);
+    }
+
+    .decorative-frame::after {
+      content: '';
+      position: absolute;
+      bottom: 0; right: 0;
+      width: 40px; height: 40px;
+      border-bottom: 2px solid var(--gold);
+      border-right: 2px solid var(--gold);
+    }
+
+    .instrument-icons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .instrument-card {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .instrument-card .icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .instrument-card .label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--sienna);
+    }
+
+    /* ── DATA SECTION ── */
+    #data {
+      padding: 6rem 0;
+      background: var(--cream);
+    }
+
+    .data-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .data-card {
+      border: 1px solid var(--border);
+      padding: 2rem;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+
+    .data-card:hover {
+      border-color: var(--gold);
+    }
+
+    .data-card-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3.5rem;
+      font-weight: 300;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+
+    .data-card h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: var(--ink);
+    }
+
+    .data-card p {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .data-pipeline {
+      margin-top: 4rem;
+      padding: 2.5rem;
+      background: var(--ink);
+      color: var(--aged);
+    }
+
+    .data-pipeline h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 300;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+    }
+
+    .pipeline-steps {
+      display: flex;
+      gap: 0;
+      align-items: stretch;
+    }
+
+    .pipeline-step {
+      flex: 1;
+      padding: 1.25rem 1rem;
+      border-left: 1px solid rgba(200,146,42,0.3);
+      position: relative;
+    }
+
+    .pipeline-step:first-child { border-left: none; }
+
+    .step-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+
+    .step-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--cream);
+      margin-bottom: 0.25rem;
+    }
+
+    .step-desc {
+      font-size: 0.8rem;
+      line-height: 1.5;
+      color: var(--border);
+      margin: 0;
+    }
+
+    /* ── CREATOR SECTION ── */
+    #creator {
+      background: var(--parchment);
+      padding: 6rem 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .creator-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 4rem;
+      margin-top: 3rem;
+    }
+
+    .creator-portrait {
+      position: relative;
+    }
+
+    .portrait-placeholder {
+      width: 100%;
+      aspect-ratio: 3/4;
+      background: var(--aged);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .portrait-placeholder .portrait-icon {
+      font-size: 3rem;
+      opacity: 0.4;
+    }
+
+    .portrait-placeholder .portrait-hint {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--border);
+    }
+
+    .creator-bio h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 300;
+      margin-bottom: 0.25rem;
+    }
+
+    .creator-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--sienna);
+      margin-bottom: 1.5rem;
+    }
+
+    .contact-block {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      background: var(--cream);
+    }
+
+    .contact-block h4 {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.6rem;
+      font-size: 0.95rem;
+    }
+
+    .contact-item a {
+      color: var(--sienna);
+      text-decoration: none;
+    }
+
+    .contact-item a:hover { text-decoration: underline; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--ink);
+      color: var(--border);
+      text-align: center;
+      padding: 2.5rem;
+      border-top: 2px solid var(--gold);
+    }
+
+    footer p {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--border);
+      margin: 0;
+    }
+
+    footer a {
+      color: var(--gold);
+      text-decoration: none;
+    }
+
+    /* ── SCROLL ANIMATIONS ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s, transform 0.8s;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 768px) {
+      .about-grid, .data-cards, .creator-layout { grid-template-columns: 1fr; }
+      .pipeline-steps { flex-direction: column; }
+      .pipeline-step { border-left: none; border-top: 1px solid rgba(200,146,42,0.3); }
+      .pipeline-step:first-child { border-top: none; }
+      nav { padding: 0 1.5rem; }
+      .nav-links { gap: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="nav-brand" href="index.html">Global Instrument Atlas</a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="visualizations.html">Visualizations</a></li>
+      <li><a href="bibliography.html">Bibliography</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-decoration"></div>
+    <p class="hero-overline">Digital Humanities Project &nbsp;·&nbsp; Ethnomusicology</p>
+    <h1>Global<br/><em>Instrument</em><br/>Atlas</h1>
+    <p class="hero-subtitle">A Cross-Cultural Database of Musical Instrument Properties</p>
+    <div class="hero-divider">
+      <span class="divider-line"></span>
+      <span>Strings · Tunings · Timbre · Geography</span>
+      <span class="divider-line"></span>
+    </div>
+    <p class="hero-desc">
+      Mapping the world's musical instruments through quantitative and qualitative data — exploring how culture, geography, and tradition shape the tools of human expression.
+    </p>
+    <a class="hero-cta" href="visualizations.html">Explore the Data</a>
+  </section>
+
+  <!-- ABOUT THE PROJECT -->
+  <section id="about">
+    <div class="section-inner">
+      <span class="section-label">§ 01 — About the Project</span>
+      <h2>A <em>Systematic Inquiry</em> into<br/>Global Instrument Properties</h2>
+
+      <div class="about-grid reveal">
+        <div class="about-text-col">
+          <p>
+            This project investigates the acoustic and structural properties of musical instruments across cultures and continents. By assembling a comprehensive database of organological data, we seek to understand how communities around the world have independently arrived at — or diverged from — common solutions in instrument design.
+          </p>
+          <p>
+            Variables such as string count, tuning patterns, material composition, and resonator geometry are systematically coded for instruments spanning Asia, Africa, the Americas, Europe, and Oceania. The result is a dataset uniquely suited to comparative musicological analysis.
+          </p>
+          <p>
+            Through this lens, we ask: what do instruments reveal about the societies that built them? How do trade routes, ecological constraints, and ritual practice shape the physics of sound?
+          </p>
+        </div>
+        <div class="about-image-col">
+          <div class="decorative-frame">
+            <div class="instrument-icons">
+              <div class="instrument-card">
+                <div class="icon">🎸</div>
+                <div class="label">Chordophones</div>
+              </div>
+              <div class="instrument-card">
+                <div class="icon">🥁</div>
+                <div class="label">Membranophones</div>
+              </div>
+              <div class="instrument-card">
+                <div class="icon">🪗</div>
+                <div class="label">Aerophones</div>
+              </div>
+              <div class="instrument-card">
+                <div class="icon">🔔</div>
+                <div class="label">Idiophones</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATA & PROCESSING -->
+  <section id="data">
+    <div class="section-inner">
+      <span class="section-label">§ 02 — Data & Processing</span>
+      <h2>From <em>Field Notes</em><br/>to Structured Data</h2>
+
+      <div class="data-cards reveal">
+        <div class="data-card">
+          <div class="data-card-num">14</div>
+          <h3>Countries Represented</h3>
+          <p>Instruments drawn from documented collections, ethnographic archives, and field recordings across six continents.</p>
+        </div>
+        <div class="data-card">
+          <div class="data-card-num">38</div>
+          <h3>Instrument Variables</h3>
+          <p>Each entry encodes properties ranging from string material and number of frets to geographic origin and ensemble context.</p>
+        </div>
+        <div class="data-card">
+          <div class="data-card-num">200+</div>
+          <h3>Instrument Entries</h3>
+          <p>A growing corpus of instruments catalogued across the Hornbostel-Sachs classification system with original annotations.</p>
+        </div>
+      </div>
+
+      <div class="data-pipeline reveal">
+        <h3>Data Processing Pipeline</h3>
+        <div class="pipeline-steps">
+          <div class="pipeline-step">
+            <span class="step-num">Step 01</span>
+            <div class="step-title">Collection</div>
+            <p class="step-desc">Drawing from ethnomusicological literature, museum catalogs, and primary fieldwork documentation.</p>
+          </div>
+          <div class="pipeline-step">
+            <span class="step-num">Step 02</span>
+            <div class="step-title">Coding</div>
+            <p class="step-desc">Standardizing qualitative descriptions into discrete, analyzable variables using a custom codebook.</p>
+          </div>
+          <div class="pipeline-step">
+            <span class="step-num">Step 03</span>
+            <div class="step-title">Cleaning</div>
+            <p class="step-desc">Resolving cross-source discrepancies and harmonizing terminology across regional traditions.</p>
+          </div>
+          <div class="pipeline-step">
+            <span class="step-num">Step 04</span>
+            <div class="step-title">Visualization</div>
+            <p class="step-desc">Rendering the dataset through Tableau dashboards for interactive comparative exploration.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ABOUT THE CREATOR -->
+  <section id="creator">
+    <div class="section-inner">
+      <span class="section-label">§ 03 — About the Creator</span>
+      <h2>The <em>Researcher</em></h2>
+
+      <div class="creator-layout reveal">
+        <div class="creator-portrait">
+          <div class="portrait-placeholder">
+            <div class="portrait-icon">🎓</div>
+            <div class="portrait-hint">Your Photo Here</div>
+          </div>
+        </div>
+
+        <div class="creator-bio">
+          <h3>Your Name</h3>
+          <p class="creator-title">Department of Ethnomusicology &nbsp;·&nbsp; University Name</p>
+          <p>
+            [Your bio goes here.] I am a researcher interested in the intersection of digital methods and comparative musicology. This project grew out of fieldwork and archival research exploring how instrument design reflects — and shapes — cultural identity across the globe.
+          </p>
+          <p>
+            My work draws on organology, digital humanities methodologies, and cross-cultural analysis to build resources accessible to both specialists and general audiences.
+          </p>
+
+          <div class="contact-block">
+            <h4>Contact</h4>
+            <div class="contact-item">
+              <span>✉</span>
+              <a href="mailto:your.email@university.edu">your.email@university.edu</a>
+            </div>
+            <div class="contact-item">
+              <span>🏛</span>
+              <span>Department of Ethnomusicology, University Name</span>
+            </div>
+            <div class="contact-item">
+              <span>🔗</span>
+              <a href="#">Academic Profile / ORCID</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      Global Instrument Atlas &nbsp;·&nbsp; A Digital Humanities Project &nbsp;·&nbsp;
+      <a href="bibliography.html">Bibliography</a> &nbsp;·&nbsp;
+      <a href="visualizations.html">Visualizations</a>
+    </p>
+  </footer>
+
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>

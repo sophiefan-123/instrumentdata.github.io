@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bibliography — Global Instrument Atlas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1a1208;
+      --parchment: #f5f0e8;
+      --aged: #e8dfc8;
+      --sienna: #8b4513;
+      --gold: #c8922a;
+      --rust: #a0522d;
+      --sage: #5c6b4a;
+      --cream: #faf7f0;
+      --border: #c4b99a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Crimson Pro', Georgia, serif;
+      background: var(--cream);
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.75;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse at 15% 30%, rgba(200,146,42,0.05) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 70%, rgba(139,69,19,0.04) 0%, transparent 55%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: var(--ink);
+      border-bottom: 2px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 3rem;
+      height: 60px;
+    }
+
+    .nav-brand {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--aged);
+      text-decoration: none;
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 0; right: 0;
+      height: 1px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transition: transform 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--gold); }
+    .nav-links a:hover::after,
+    .nav-links a.active::after { transform: scaleX(1); }
+    .nav-links a.active { color: var(--gold); }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      padding: 140px 2rem 60px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 1;
+    }
+
+    .overline {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .page-header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      font-weight: 300;
+      color: var(--ink);
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+
+    .page-header h1 em {
+      font-style: italic;
+      color: var(--sienna);
+    }
+
+    .page-header p {
+      max-width: 600px;
+      margin: 0 auto;
+      font-size: 1rem;
+      color: #5a4a36;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    .bib-page {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 5rem 2rem 7rem;
+    }
+
+    /* ── CATEGORY SECTIONS ── */
+    .bib-category {
+      margin-bottom: 4rem;
+    }
+
+    .bib-category-header {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cat-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    .bib-category h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 300;
+      color: var(--ink);
+      margin: 0;
+    }
+
+    /* ── ENTRIES ── */
+    .bib-list {
+      list-style: none;
+    }
+
+    .bib-entry {
+      padding: 1.25rem 0 1.25rem 1.5rem;
+      border-bottom: 1px solid rgba(196,185,154,0.4);
+      position: relative;
+      transition: background 0.15s;
+    }
+
+    .bib-entry::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 1.5rem;
+      bottom: 1.5rem;
+      width: 2px;
+      background: var(--border);
+      transition: background 0.15s;
+    }
+
+    .bib-entry:hover { background: rgba(200,146,42,0.04); }
+    .bib-entry:hover::before { background: var(--gold); }
+
+    .bib-entry:last-child { border-bottom: none; }
+
+    .bib-text {
+      font-size: 0.97rem;
+      line-height: 1.8;
+      color: #3a2e1e;
+      /* Hanging indent for citation format */
+      text-indent: -1.5rem;
+      padding-left: 1.5rem;
+    }
+
+    .bib-text .author {
+      font-weight: 400;
+    }
+
+    .bib-text .title {
+      font-style: italic;
+    }
+
+    .bib-text a {
+      color: var(--sienna);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(139,69,19,0.3);
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .bib-text a:hover {
+      color: var(--rust);
+      border-color: var(--rust);
+    }
+
+    .bib-tag {
+      display: inline-block;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.5rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.15rem 0.5rem;
+      border: 1px solid var(--border);
+      color: var(--border);
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+
+    /* ── STYLE NOTE ── */
+    .style-note {
+      background: var(--parchment);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--gold);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 3rem;
+      font-size: 0.88rem;
+      color: #5a4a36;
+    }
+
+    .style-note strong {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+
+    /* ── SEARCH BAR ── */
+    .bib-search-bar {
+      display: flex;
+      gap: 0;
+      margin-bottom: 3rem;
+    }
+
+    .bib-search-bar input {
+      flex: 1;
+      padding: 0.75rem 1.25rem;
+      font-family: 'Crimson Pro', serif;
+      font-size: 1rem;
+      background: var(--parchment);
+      border: 1px solid var(--border);
+      border-right: none;
+      color: var(--ink);
+      outline: none;
+    }
+
+    .bib-search-bar input:focus {
+      border-color: var(--gold);
+    }
+
+    .bib-search-bar input::placeholder {
+      color: var(--border);
+      font-style: italic;
+    }
+
+    .bib-search-bar button {
+      padding: 0.75rem 1.5rem;
+      background: var(--sienna);
+      border: 1px solid var(--sienna);
+      color: var(--cream);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .bib-search-bar button:hover {
+      background: var(--ink);
+    }
+
+    /* ── REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s, transform 0.7s;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--ink);
+      color: var(--border);
+      text-align: center;
+      padding: 2.5rem;
+      border-top: 2px solid var(--gold);
+      position: relative;
+      z-index: 1;
+    }
+
+    footer p {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--border);
+      margin: 0;
+    }
+
+    footer a {
+      color: var(--gold);
+      text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+      nav { padding: 0 1.5rem; }
+      .nav-links { gap: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="nav-brand" href="index.html">Global Instrument Atlas</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="visualizations.html">Visualizations</a></li>
+      <li><a href="bibliography.html" class="active">Bibliography</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-header">
+    <span class="overline">Works Cited</span>
+    <h1>Bibliography &<br/><em>Sources</em></h1>
+    <p>All primary sources, secondary scholarship, databases, and digital resources consulted in the construction of this project.</p>
+  </div>
+
+  <main class="bib-page">
+
+    <div class="style-note reveal">
+      <strong>Citation Style</strong>
+      All citations follow the Chicago Manual of Style (17th edition), Author-Date format. URLs were last accessed [Month Year]. Replace the placeholder entries below with your actual sources.
+    </div>
+
+    <div class="bib-search-bar reveal">
+      <input type="text" id="bib-search" placeholder="Filter by author, title, or keyword…" oninput="filterBib(this.value)"/>
+      <button onclick="filterBib(document.getElementById('bib-search').value)">Search</button>
+    </div>
+
+    <!-- SECTION 1: Primary Sources -->
+    <div class="bib-category reveal" data-cat="primary">
+      <div class="bib-category-header">
+        <span class="cat-num">§ 01</span>
+        <h2>Primary Sources & Databases</h2>
+      </div>
+      <ul class="bib-list" id="list-primary">
+        <li class="bib-entry">
+          <p class="bib-text">
+            <span class="author">Hornbostel, Erich M. von, and Curt Sachs.</span> "<span class="title">Systematik der Musikinstrumente: Ein Versuch.</span>" <span class="title">Zeitschrift für Ethnologie</span> 46, no. 4/5 (1914): 553–90. [Translated by Anthony Baines and Klaus P. Wachsmann as "Classification of Musical Instruments," <span class="title">Galpin Society Journal</span> 14 (1961): 3–29.]
+          </p>
+        </li>
+        <li class="bib-entry">
+          <p class="bib-text">
+            <span class="author">MIMO Consortium.</span> <span class="title">MIMO — Musical Instrument Museums Online</span>. Database. <a href="https://mimo-international.com" target="_blank">mimo-international.com</a>. <span class="bib-tag">Database</span>
+          </p>
+        </li>
+        <li class="bib-entry">
+          <p class="bib-text">
+            <span class="author">[Your institution or fieldwork source].</span> <span class="title">[Database or archive name]</span>. [Location / URL]. [Date accessed]. <span class="bib-tag">Primary</span>
+          </p>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SECTION 2: Ethnomusicology -->
+    <div class="bib-category reveal" data-cat="ethno">
+      <div class="bib-category-header">
+        <span class="cat-num">§ 02</span>
+        <h2>Ethnomusicology & Organology</h2>
+      </div>
+      <ul class="bib-list" id="list-ethno">
+        <li class="bib-entry">
+          <p class="bib-text">
+            <span class="author">Blades, James.</span> <span class="title">Percussion Instruments and Their History</span>. Revised ed. Westport, CT: Bold Strummer, 1992.
+          </p>
+        </li>
+        <li class="bib-entry">
+          <p class="bib-text">
+            <span class="author">Hood, Mantle.</span> <span class="title">The Ethnomusicologist</span>. New York: McGraw-Hill, 1971.
+          </p>
+        </li>
+        <li class="bib-entry">
+          <p class="bib-text">
+            <span class="author">Kartomi, Margaret J.</span> <span class="title">On Concepts and Classifications of Musical Instruments</span>. Chicago: University of Chicago Press, 1990.
+          </p>
+        </li>
+        <li class="bib-entry">
+          <p class="bib-text">
+            <span class="author">Merriam, Alan P.</span> <span class="title">The Anthropology of Music</span>. Evanston, IL: Northwestern University Press, 1964.
+          </p>
+        </li>
+        <li class="bib-entry">
+          <p class="bib-text">
+            <span class="author">[Author Last, First.]</span> "<span class="title">[Article Title]</span>." <span class="title">[Journal Name]</span> [Vol], no. [No.] ([Year]): [Pages].
+          </p>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SECTION 3: Digital Humanities Methods -->
+    <div class="bib-category reveal" data-cat="dh">
+      <div class="bib-category-header">
+        <span class="cat-num">§ 03</span>
+        <h2>Digital Humanities & Methods</h2>
+      </div>
+      <ul class="bib-list" id="list-dh">
+        <li class="bib-entry">
+          <p class="bib-text">
+            <span class="author">Drucker, Johanna.</span> <span class="title">Graphesis: Visual Forms of Knowledge Production</span>. Cambridge, MA: Harvard University Press, 2014.
+          </p>
+        </li>
+        <li class="bib-entry">
+          <p class="bib-text">
+            <span class="author">Jänicke, Stefan, Greta Franzini, Muhammad Faisal Cheema, and Gerik Scheuermann.</span> "On Close and Distant Reading in Digital Humanities: A Survey and Future Challenges." In <span class="title">Eurographics Conference on Visualization (EuroVis)</span>, edited by R. Borgo, F. Ganovelli, and I. Viola. Goslar: Eurographics Association, 2015. <span class="bib-tag">Methods</span>
+          </p>
+        </li>
+        <li class="bib-entry">
+          <p class="bib-text">
+            <span class="author">Moretti, Franco.</span> <span class="title">Distant Reading</span>. London: Verso, 2013.
+          </p>
+        </li>
+        <li class="bib-entry">
+          <p class="bib-text">
+            <span class="author">[Author Last, First.]</span> <span class="title">[Book or Article Title]</span>. [Place]: [Publisher], [Year]. <span class="bib-tag">Methods</span>
+          </p>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SECTION 4: Regional & Specific Traditions -->
+    <div class="bib-category reveal" data-cat="regional">
+      <div class="bib-category-header">
+        <span class="cat-num">§ 04</span>
+        <h2>Regional Studies & Specific Traditions</h2>
+      </div>
+      <ul class="bib-list" id="list-regional">
+        <li class="bib-entry">
+          <p class="bib-text">
+            <span class="author">[Author Last, First.]</span> <span class="title">[Title: Regional Study]</span>. [Place]: [Publisher], [Year].
+          </p>
+        </li>
+        <li class="bib-entry">
+          <p class="bib-text">
+            <span class="author">[Author Last, First.]</span> "<span class="title">[Article on Specific Instrument Tradition]</span>." <span class="title">[Journal]</span> [Vol], no. [No.] ([Year]): [Pages].
+          </p>
+        </li>
+        <li class="bib-entry">
+          <p class="bib-text">
+            <span class="author">[Author Last, First.]</span> "<span class="title">[Chapter Title]</span>." In <span class="title">[Edited Volume Title]</span>, edited by [Editor Name], [Pages]. [Place]: [Publisher], [Year].
+          </p>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SECTION 5: Online & Multimedia -->
+    <div class="bib-category reveal" data-cat="online">
+      <div class="bib-category-header">
+        <span class="cat-num">§ 05</span>
+        <h2>Online Resources & Multimedia</h2>
+      </div>
+      <ul class="bib-list" id="list-online">
+        <li class="bib-entry">
+          <p class="bib-text">
+            <span class="author">Smithsonian Folkways.</span> <span class="title">Smithsonian Folkways Recordings</span>. Washington, DC: Smithsonian Institution. <a href="https://folkways.si.edu" target="_blank">folkways.si.edu</a>. <span class="bib-tag">Online</span>
+          </p>
+        </li>
+        <li class="bib-entry">
+          <p class="bib-text">
+            <span class="author">[Organization or Author].</span> "<span class="title">[Resource Title]</span>." [Website Name]. [Year]. <a href="#">[URL]</a>. Accessed [Month Day, Year]. <span class="bib-tag">Online</span>
+          </p>
+        </li>
+      </ul>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>
+      Global Instrument Atlas &nbsp;·&nbsp; A Digital Humanities Project &nbsp;·&nbsp;
+      <a href="index.html">Home</a> &nbsp;·&nbsp;
+      <a href="visualizations.html">Visualizations</a>
+    </p>
+  </footer>
+
+  <script>
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.05 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Live filter
+    function filterBib(query) {
+      const q = query.toLowerCase().trim();
+      document.querySelectorAll('.bib-entry').forEach(entry => {
+        const text = entry.textContent.toLowerCase();
+        entry.style.display = (!q || text.includes(q)) ? '' : 'none';
+      });
+    }
+  </script>
+</body>
+</html>
