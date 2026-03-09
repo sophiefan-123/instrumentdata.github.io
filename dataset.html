@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Dataset — Global Instrument Atlas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1a1208;
+      --parchment: #f5f0e8;
+      --aged: #e8dfc8;
+      --sienna: #8b4513;
+      --gold: #c8922a;
+      --rust: #a0522d;
+      --sage: #5c6b4a;
+      --cream: #faf7f0;
+      --border: #c4b99a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Crimson Pro', Georgia, serif;
+      background: var(--cream);
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.75;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse at 10% 20%, rgba(200,146,42,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse at 90% 80%, rgba(139,69,19,0.04) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: var(--ink);
+      border-bottom: 2px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 3rem;
+      height: 60px;
+    }
+
+    .nav-brand {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--aged);
+      text-decoration: none;
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -3px; left: 0; right: 0;
+      height: 1px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transition: transform 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--gold); }
+    .nav-links a:hover::after,
+    .nav-links a.active::after { transform: scaleX(1); }
+    .nav-links a.active { color: var(--gold); }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      padding: 140px 2rem 60px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 1;
+    }
+
+    .overline {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .page-header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      font-weight: 300;
+      color: var(--ink);
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+
+    .page-header h1 em { font-style: italic; color: var(--sienna); }
+
+    .page-header p {
+      max-width: 620px;
+      margin: 0 auto;
+      font-size: 1rem;
+      color: #5a4a36;
+    }
+
+    /* ── MAIN ── */
+    .dataset-page {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 5rem 2rem 7rem;
+    }
+
+    /* ── INTRO STRIP ── */
+    .intro-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
+      border: 1px solid var(--border);
+      margin-bottom: 5rem;
+    }
+
+    .intro-cell {
+      padding: 2rem;
+      border-right: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .intro-cell:last-child { border-right: none; }
+
+    .intro-cell .cell-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3rem;
+      font-weight: 300;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 0.25rem;
+    }
+
+    .intro-cell .cell-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--sienna);
+    }
+
+    /* ── SECTION LABELS ── */
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: block;
+      margin-bottom: 0.75rem;
+    }
+
+    h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      font-weight: 300;
+      line-height: 1.15;
+      margin-bottom: 1.5rem;
+      color: var(--ink);
+    }
+
+    h2 em { font-style: italic; color: var(--sienna); }
+
+    p { color: #3d3020; margin-bottom: 1.2rem; }
+    p:last-child { margin-bottom: 0; }
+
+    /* ── EMBED SECTION ── */
+    .embed-section {
+      margin-bottom: 6rem;
+    }
+
+    .embed-intro {
+      max-width: 720px;
+      margin-bottom: 2.5rem;
+    }
+
+    /* The live iframe embed */
+    .iframe-wrapper {
+      width: 100%;
+      border: 1px solid var(--border);
+      position: relative;
+      background: var(--aged);
+    }
+
+    .iframe-wrapper iframe {
+      width: 100%;
+      height: 700px;
+      border: none;
+      display: block;
+    }
+
+    /* Fallback shown when iframe fails / user uses screenshot mode */
+    .iframe-fallback {
+      display: none; /* shown via JS if iframe errors, or toggle manually */
+      padding: 3rem;
+      text-align: center;
+    }
+
+    .iframe-fallback p {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: var(--border);
+    }
+
+    /* Toggle buttons */
+    .view-toggle {
+      display: flex;
+      gap: 0;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+      width: fit-content;
+    }
+
+    .toggle-btn {
+      padding: 0.6rem 1.5rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: transparent;
+      border: none;
+      border-right: 1px solid var(--border);
+      color: var(--border);
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .toggle-btn:last-child { border-right: none; }
+
+    .toggle-btn.active {
+      background: var(--sienna);
+      color: var(--cream);
+    }
+
+    .toggle-btn:not(.active):hover {
+      background: var(--aged);
+      color: var(--ink);
+    }
+
+    /* ── SCREENSHOT GALLERY ── */
+    .screenshot-section {
+      display: none; /* toggled by JS */
+      margin-bottom: 6rem;
+    }
+
+    .screenshot-section.visible { display: block; }
+    .embed-section.hidden { display: none; }
+
+    .screenshot-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4rem;
+    }
+
+    .screenshot-block {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: start;
+      padding-bottom: 4rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .screenshot-block:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .screenshot-block.flipped {
+      direction: rtl;
+    }
+
+    .screenshot-block.flipped > * {
+      direction: ltr;
+    }
+
+    .screenshot-img-col {
+      position: relative;
+    }
+
+    /* The actual screenshot image */
+    .screenshot-img-col img {
+      width: 100%;
+      display: block;
+      border: 1px solid var(--border);
+    }
+
+    /* Placeholder shown before user adds real screenshots */
+    .screenshot-placeholder {
+      width: 100%;
+      aspect-ratio: 16/10;
+      background: var(--aged);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .screenshot-placeholder::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        0deg, transparent, transparent 29px,
+        rgba(200,146,42,0.07) 29px, rgba(200,146,42,0.07) 30px
+      ), repeating-linear-gradient(
+        90deg, transparent, transparent 29px,
+        rgba(200,146,42,0.07) 29px, rgba(200,146,42,0.07) 30px
+      );
+    }
+
+    .placeholder-icon {
+      font-size: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .placeholder-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--border);
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 0 1rem;
+    }
+
+    /* Corner accents on images */
+    .img-frame {
+      position: relative;
+    }
+
+    .img-frame::before {
+      content: '';
+      position: absolute;
+      top: -6px; left: -6px;
+      width: 24px; height: 24px;
+      border-top: 2px solid var(--gold);
+      border-left: 2px solid var(--gold);
+      z-index: 2;
+    }
+
+    .img-frame::after {
+      content: '';
+      position: absolute;
+      bottom: -6px; right: -6px;
+      width: 24px; height: 24px;
+      border-bottom: 2px solid var(--gold);
+      border-right: 2px solid var(--gold);
+      z-index: 2;
+    }
+
+    /* ── SCREENSHOT TEXT ── */
+    .screenshot-text-col {
+      padding-top: 0.5rem;
+    }
+
+    .screenshot-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 5rem;
+      font-weight: 300;
+      color: var(--border);
+      line-height: 1;
+      margin-bottom: -1rem;
+    }
+
+    .screenshot-text-col h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 400;
+      color: var(--ink);
+      margin-bottom: 0.75rem;
+      line-height: 1.2;
+    }
+
+    .screenshot-text-col h3 em {
+      font-style: italic;
+      color: var(--sienna);
+    }
+
+    .screenshot-text-col p {
+      font-size: 0.97rem;
+      line-height: 1.85;
+    }
+
+    .field-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1.25rem;
+    }
+
+    .field-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.52rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.6rem;
+      border: 1px solid var(--border);
+      color: var(--sienna);
+      background: var(--parchment);
+    }
+
+    /* ── CODEBOOK SECTION ── */
+    .codebook-section {
+      background: var(--ink);
+      color: var(--aged);
+      padding: 3rem;
+      margin-bottom: 5rem;
+    }
+
+    .codebook-section h2 {
+      color: var(--gold);
+      font-size: 1.6rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .codebook-section > p {
+      color: var(--border);
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+    }
+
+    .codebook-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .codebook-table th {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      text-align: left;
+      padding: 0.6rem 1rem 0.6rem 0;
+      border-bottom: 1px solid rgba(200,146,42,0.3);
+    }
+
+    .codebook-table td {
+      font-size: 0.88rem;
+      padding: 0.7rem 1rem 0.7rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      color: var(--aged);
+      vertical-align: top;
+    }
+
+    .codebook-table tr:last-child td { border-bottom: none; }
+
+    .codebook-table td:first-child {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.05em;
+      color: var(--cream);
+      white-space: nowrap;
+    }
+
+    .var-type {
+      display: inline-block;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.48rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.1rem 0.4rem;
+      border: 1px solid rgba(200,146,42,0.4);
+      color: var(--gold);
+    }
+
+    /* ── ACCESS SECTION ── */
+    .access-section {
+      margin-bottom: 3rem;
+    }
+
+    .access-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .access-card {
+      border: 1px solid var(--border);
+      padding: 2rem;
+      transition: border-color 0.2s;
+    }
+
+    .access-card:hover { border-color: var(--gold); }
+
+    .access-card .card-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .access-card h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .access-card p {
+      font-size: 0.88rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .access-card a {
+      display: inline-block;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--sienna);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .access-card a:hover { color: var(--ink); border-color: var(--ink); }
+
+    /* ── REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s, transform 0.7s;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--ink);
+      color: var(--border);
+      text-align: center;
+      padding: 2.5rem;
+      border-top: 2px solid var(--gold);
+      position: relative;
+      z-index: 1;
+    }
+
+    footer p {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--border);
+      margin: 0;
+    }
+
+    footer a { color: var(--gold); text-decoration: none; }
+
+    @media (max-width: 768px) {
+      nav { padding: 0 1.5rem; }
+      .nav-links { gap: 1.5rem; }
+      .intro-strip { grid-template-columns: 1fr; }
+      .intro-cell { border-right: none; border-bottom: 1px solid var(--border); }
+      .intro-cell:last-child { border-bottom: none; }
+      .screenshot-block, .screenshot-block.flipped { grid-template-columns: 1fr; direction: ltr; }
+      .access-cards { grid-template-columns: 1fr; }
+      .codebook-section { padding: 2rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="nav-brand" href="index.html">Global Instrument Atlas</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="dataset.html" class="active">Dataset</a></li>
+      <li><a href="visualizations.html">Visualizations</a></li>
+      <li><a href="bibliography.html">Bibliography</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-header">
+    <span class="overline">The Data</span>
+    <h1>Instrument<br/><em>Database</em></h1>
+    <p>Browse the full instrument database, explore its structure, and understand the variables and coding decisions behind the dataset.</p>
+  </div>
+
+  <main class="dataset-page">
+
+    <!-- STATS STRIP -->
+    <div class="intro-strip reveal">
+      <div class="intro-cell">
+        <div class="cell-num">200+</div>
+        <div class="cell-label">Instruments Catalogued</div>
+      </div>
+      <div class="intro-cell">
+        <div class="cell-num">38</div>
+        <div class="cell-label">Variables per Entry</div>
+      </div>
+      <div class="intro-cell">
+        <div class="cell-num">14</div>
+        <div class="cell-label">Countries Represented</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         LIVE EMBED SECTION
+         To embed your database website (e.g. Airtable, Google Sheets, 
+         Notion, or any public URL), replace the src="" in the iframe below.
+         If the site blocks embedding, switch to Screenshot View using the toggle.
+    ════════════════════════════════════════════ -->
+    <div class="embed-section" id="embed-section">
+      <span class="section-label">§ 01 — Browse the Data</span>
+      <h2>Explore the <em>Full Dataset</em></h2>
+
+      <div class="embed-intro reveal">
+        <p>
+          The complete instrument database is accessible below. Use the built-in filters and search to explore entries by region, instrument family, string count, tuning type, and more.
+        </p>
+      </div>
+
+      <!-- TOGGLE between live embed and screenshot view -->
+      <div class="view-toggle reveal">
+        <button class="toggle-btn active" id="btn-embed" onclick="showEmbed()">Live View</button>
+        <button class="toggle-btn" id="btn-screenshots" onclick="showScreenshots()">Screenshot View</button>
+      </div>
+
+      <div class="iframe-wrapper reveal" id="iframe-wrapper">
+        <!--
+          ═══════════════════════════════════════════
+          PASTE YOUR DATABASE URL HERE
+          Works with: Airtable (shared view), Google Sheets (published),
+          Notion (published page), or any publicly embeddable URL.
+
+          Example Airtable:
+            src="https://airtable.com/embed/shrXXXXXXXX"
+
+          Example Google Sheets:
+            src="https://docs.google.com/spreadsheets/d/YOUR_ID/pubhtml?widget=true"
+
+          Example Notion:
+            src="https://your-workspace.notion.site/your-page-id"
+          ═══════════════════════════════════════════
+        -->
+        <iframe
+          src=""
+          id="db-iframe"
+          allowfullscreen
+          title="Instrument Database">
+        </iframe>
+
+        <!-- Shown automatically if iframe src is empty or fails to load -->
+        <div class="iframe-fallback" id="iframe-fallback">
+          <p>No embed URL set — switch to Screenshot View or add your database URL to the iframe src above.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         SCREENSHOT SECTION
+         Replace the .screenshot-placeholder divs with real <img> tags
+         once you have screenshots of your database.
+
+         Example:
+           <img src="screenshots/database-overview.png" alt="Database overview" />
+
+         Recommended: Export screenshots at 1400px wide for sharpness.
+    ════════════════════════════════════════════ -->
+    <div class="screenshot-section" id="screenshot-section">
+      <span class="section-label">§ 01 — Database Walkthrough</span>
+      <h2>A Tour of the <em>Dataset</em></h2>
+
+      <div class="view-toggle" style="margin-bottom:2.5rem;">
+        <button class="toggle-btn" id="btn-embed-2" onclick="showEmbed()">Live View</button>
+        <button class="toggle-btn active" id="btn-screenshots-2" onclick="showScreenshots()">Screenshot View</button>
+      </div>
+
+      <div class="screenshot-grid">
+
+        <!-- SCREENSHOT 1 -->
+        <div class="screenshot-block reveal">
+          <div class="screenshot-img-col">
+            <div class="img-frame">
+              <!-- Replace below with: <img src="screenshots/your-image.png" alt="Description" /> -->
+              <div class="screenshot-placeholder">
+                <div class="placeholder-icon">🖼</div>
+                <div class="placeholder-label">Screenshot 1<br/>Replace with your image</div>
+              </div>
+            </div>
+          </div>
+          <div class="screenshot-text-col">
+            <div class="screenshot-num">01</div>
+            <h3>Database <em>Overview</em></h3>
+            <p>
+              [Describe what this screenshot shows.] The main database view displays all instrument entries in a tabular format, sortable by region, classification family, and string count. Each row represents a single instrument with its full set of coded variables.
+            </p>
+            <div class="field-tags">
+              <span class="field-tag">Instrument Name</span>
+              <span class="field-tag">Region</span>
+              <span class="field-tag">Classification</span>
+              <span class="field-tag">String Count</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCREENSHOT 2 -->
+        <div class="screenshot-block flipped reveal">
+          <div class="screenshot-img-col">
+            <div class="img-frame">
+              <div class="screenshot-placeholder">
+                <div class="placeholder-icon">🖼</div>
+                <div class="placeholder-label">Screenshot 2<br/>Replace with your image</div>
+              </div>
+            </div>
+          </div>
+          <div class="screenshot-text-col">
+            <div class="screenshot-num">02</div>
+            <h3>Individual <em>Instrument Entry</em></h3>
+            <p>
+              [Describe what this screenshot shows.] Each instrument record contains a full breakdown of its acoustic and cultural properties. Fields include tuning system, resonator material, ensemble context, geographic coordinates of origin, and bibliographic sources.
+            </p>
+            <div class="field-tags">
+              <span class="field-tag">Tuning System</span>
+              <span class="field-tag">Resonator Type</span>
+              <span class="field-tag">Ensemble Context</span>
+              <span class="field-tag">Source</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCREENSHOT 3 -->
+        <div class="screenshot-block reveal">
+          <div class="screenshot-img-col">
+            <div class="img-frame">
+              <div class="screenshot-placeholder">
+                <div class="placeholder-icon">🖼</div>
+                <div class="placeholder-label">Screenshot 3<br/>Replace with your image</div>
+              </div>
+            </div>
+          </div>
+          <div class="screenshot-text-col">
+            <div class="screenshot-num">03</div>
+            <h3>Filtering by <em>Region & Family</em></h3>
+            <p>
+              [Describe what this screenshot shows.] The database supports filtering by Hornbostel-Sachs classification and by geographic region, enabling targeted comparisons across traditions. This view shows the Southeast Asian chordophone subset filtered for instruments with more than four strings.
+            </p>
+            <div class="field-tags">
+              <span class="field-tag">Filter View</span>
+              <span class="field-tag">Southeast Asia</span>
+              <span class="field-tag">Chordophones</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCREENSHOT 4 — optional, delete if not needed -->
+        <div class="screenshot-block flipped reveal">
+          <div class="screenshot-img-col">
+            <div class="img-frame">
+              <div class="screenshot-placeholder">
+                <div class="placeholder-icon">🖼</div>
+                <div class="placeholder-label">Screenshot 4<br/>Replace with your image</div>
+              </div>
+            </div>
+          </div>
+          <div class="screenshot-text-col">
+            <div class="screenshot-num">04</div>
+            <h3>Codebook &<br/><em>Variable Definitions</em></h3>
+            <p>
+              [Describe what this screenshot shows.] A companion codebook documents every variable, its type, and the decision rules used in coding. This ensures the dataset is reproducible and interpretable by other researchers.
+            </p>
+            <div class="field-tags">
+              <span class="field-tag">Codebook</span>
+              <span class="field-tag">Variable Definitions</span>
+              <span class="field-tag">Methodology</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CODEBOOK TABLE -->
+    <div class="codebook-section reveal">
+      <h2>Variable Codebook</h2>
+      <p>Key variables recorded for each instrument entry, their data types, and example values.</p>
+      <table class="codebook-table">
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Example Values</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>instrument_name</td>
+            <td><span class="var-type">Text</span></td>
+            <td>Primary name in source language with transliteration</td>
+            <td>Sitar, Kora, Oud</td>
+          </tr>
+          <tr>
+            <td>hs_classification</td>
+            <td><span class="var-type">Categorical</span></td>
+            <td>Hornbostel-Sachs classification code</td>
+            <td>321.322, 312.12</td>
+          </tr>
+          <tr>
+            <td>region</td>
+            <td><span class="var-type">Categorical</span></td>
+            <td>Broad geographic region of cultural origin</td>
+            <td>South Asia, West Africa, Middle East</td>
+          </tr>
+          <tr>
+            <td>country</td>
+            <td><span class="var-type">Text</span></td>
+            <td>Country of primary association</td>
+            <td>India, Senegal, Morocco</td>
+          </tr>
+          <tr>
+            <td>string_count</td>
+            <td><span class="var-type">Numeric</span></td>
+            <td>Total number of strings including drone strings</td>
+            <td>4, 7, 21</td>
+          </tr>
+          <tr>
+            <td>tuning_system</td>
+            <td><span class="var-type">Categorical</span></td>
+            <td>Primary intonation system used</td>
+            <td>Just intonation, Pentatonic, Equal temperament</td>
+          </tr>
+          <tr>
+            <td>resonator_material</td>
+            <td><span class="var-type">Categorical</span></td>
+            <td>Primary material of the resonating body</td>
+            <td>Gourd, Wood, Metal</td>
+          </tr>
+          <tr>
+            <td>ensemble_context</td>
+            <td><span class="var-type">Categorical</span></td>
+            <td>Primary performance context</td>
+            <td>Solo, Ensemble, Ceremonial</td>
+          </tr>
+          <tr>
+            <td>[Add your variable]</td>
+            <td><span class="var-type">Type</span></td>
+            <td>[Description]</td>
+            <td>[Examples]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ACCESS / DOWNLOAD -->
+    <div class="access-section reveal">
+      <span class="section-label">§ 02 — Data Access</span>
+      <h2>Access & <em>Download</em></h2>
+      <div class="access-cards">
+        <div class="access-card">
+          <div class="card-icon">📄</div>
+          <h3>Download the Dataset</h3>
+          <p>The full dataset is available as a CSV file for download and use in your own analysis. Please cite this project if you use the data.</p>
+          <a href="#">Download CSV →</a>
+        </div>
+        <div class="access-card">
+          <div class="card-icon">🔗</div>
+          <h3>View the Full Database</h3>
+          <p>Access the live database directly in your browser with full filtering and search capabilities.</p>
+          <a href="#" target="_blank">Open Database →</a>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>
+      Global Instrument Atlas &nbsp;·&nbsp; A Digital Humanities Project &nbsp;·&nbsp;
+      <a href="index.html">Home</a> &nbsp;·&nbsp;
+      <a href="visualizations.html">Visualizations</a> &nbsp;·&nbsp;
+      <a href="bibliography.html">Bibliography</a>
+    </p>
+  </footer>
+
+  <script>
+    // ── Scroll reveal ──
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.05 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // ── Toggle between live embed and screenshot view ──
+    function showEmbed() {
+      document.getElementById('embed-section').classList.remove('hidden');
+      document.getElementById('screenshot-section').classList.remove('visible');
+      document.getElementById('screenshot-section').style.display = 'none';
+      document.getElementById('btn-embed').classList.add('active');
+      document.getElementById('btn-screenshots').classList.remove('active');
+      if (document.getElementById('btn-embed-2')) {
+        document.getElementById('btn-embed-2').classList.add('active');
+        document.getElementById('btn-screenshots-2').classList.remove('active');
+      }
+    }
+
+    function showScreenshots() {
+      document.getElementById('embed-section').classList.add('hidden');
+      document.getElementById('screenshot-section').style.display = 'block';
+      document.getElementById('btn-embed').classList.remove('active');
+      document.getElementById('btn-screenshots').classList.add('active');
+      if (document.getElementById('btn-embed-2')) {
+        document.getElementById('btn-embed-2').classList.remove('active');
+        document.getElementById('btn-screenshots-2').classList.add('active');
+      }
+      // Re-trigger reveals for screenshot section
+      document.querySelectorAll('#screenshot-section .reveal').forEach(el => {
+        observer.observe(el);
+      });
+    }
+
+    // ── Auto-detect if iframe src is empty and show fallback ──
+    window.addEventListener('load', () => {
+      const iframe = document.getElementById('db-iframe');
+      const fallback = document.getElementById('iframe-fallback');
+      if (!iframe.src || iframe.src === window.location.href) {
+        iframe.style.display = 'none';
+        fallback.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
