@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Visualizations — Global Instrument Atlas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1a1208;
+      --parchment: #f5f0e8;
+      --aged: #e8dfc8;
+      --sienna: #8b4513;
+      --gold: #c8922a;
+      --rust: #a0522d;
+      --sage: #5c6b4a;
+      --cream: #faf7f0;
+      --border: #c4b99a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Crimson Pro', Georgia, serif;
+      background: var(--cream);
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.75;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse at 10% 20%, rgba(200,146,42,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse at 90% 80%, rgba(139,69,19,0.04) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: var(--ink);
+      border-bottom: 2px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 3rem;
+      height: 60px;
+    }
+
+    .nav-brand {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--aged);
+      text-decoration: none;
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -3px; left: 0; right: 0;
+      height: 1px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transition: transform 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--gold); }
+    .nav-links a:hover::after,
+    .nav-links a.active::after { transform: scaleX(1); }
+    .nav-links a.active { color: var(--gold); }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      padding: 140px 2rem 60px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 1;
+    }
+
+    .page-header .overline {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .page-header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      font-weight: 300;
+      color: var(--ink);
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+
+    .page-header h1 em {
+      font-style: italic;
+      color: var(--sienna);
+    }
+
+    .page-header p {
+      max-width: 600px;
+      margin: 0 auto;
+      font-size: 1rem;
+      color: #5a4a36;
+    }
+
+    /* ── TOC ── */
+    .toc {
+      position: relative;
+      z-index: 1;
+      background: var(--parchment);
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 3rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .toc-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--border);
+    }
+
+    .toc a {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--sienna);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .toc a:hover { color: var(--ink); }
+
+    /* ── VIZ BLOCKS ── */
+    .viz-page { position: relative; z-index: 1; }
+
+    .viz-block {
+      padding: 6rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .viz-block:nth-child(even) { background: var(--parchment); }
+
+    .viz-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .viz-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .viz-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 4rem;
+      font-weight: 300;
+      color: var(--border);
+      line-height: 1;
+    }
+
+    .viz-head { flex: 1; }
+
+    .viz-head .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+
+    .viz-head h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 300;
+      color: var(--ink);
+      line-height: 1.15;
+      margin: 0;
+    }
+
+    .viz-head h2 em { font-style: italic; color: var(--sienna); }
+
+    /* ── MAP + PANEL LAYOUT ── */
+    .map-and-panel {
+      display: flex;
+      gap: 0;
+      margin: 2.5rem 0 0;
+      border: 1px solid var(--border);
+      background: var(--aged);
+      /* panel is 300px wide; map fills the rest */
+    }
+
+    .tableau-wrap {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* Tableau sizing: fill the flex cell */
+    .tableau-wrap .tableauPlaceholder {
+      width: 100%;
+      height: 100%;
+      min-height: 420px;
+    }
+
+    .tableau-wrap .tableauPlaceholder object {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* ── INSTRUMENT PANEL ── */
+    .inst-panel {
+      width: 290px;
+      min-width: 290px;
+      background: var(--ink);
+      border-left: 1px solid var(--gold);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .inst-panel-head {
+      padding: 1.1rem 1.25rem 0.8rem;
+      border-bottom: 1px solid rgba(196,185,154,0.2);
+      flex-shrink: 0;
+    }
+
+    .inst-panel-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.52rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.3rem;
+    }
+
+    .inst-country-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      font-weight: 300;
+      color: var(--aged);
+      min-height: 1.6rem;
+      line-height: 1.2;
+    }
+
+    .inst-count {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.52rem;
+      letter-spacing: 0.08em;
+      color: rgba(196,185,154,0.5);
+      margin-top: 0.15rem;
+    }
+
+    /* Empty state */
+    .inst-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.9rem;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .inst-empty svg { opacity: 0.18; }
+
+    .inst-empty p {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(196,185,154,0.45);
+      line-height: 1.9;
+    }
+
+    /* Instrument list */
+    .inst-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(200,146,42,0.3) transparent;
+    }
+
+    .inst-card {
+      display: flex;
+      gap: 0;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(196,185,154,0.12);
+      overflow: hidden;
+      transition: border-color 0.2s;
+      animation: cardIn 0.3s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    .inst-card:hover { border-color: rgba(200,146,42,0.5); }
+
+    @keyframes cardIn {
+      from { opacity:0; transform: translateY(5px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    .inst-img-wrap {
+      width: 64px;
+      min-width: 64px;
+      height: 64px;
+      background: rgba(0,0,0,0.3);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .inst-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+
+    .inst-card:hover .inst-img-wrap img { opacity: 1; }
+
+    .inst-img-placeholder {
+      font-size: 1.3rem;
+      color: rgba(196,185,154,0.25);
+    }
+
+    .inst-card-body {
+      padding: 0.55rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.15rem;
+    }
+
+    .inst-card-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.88rem;
+      color: var(--aged);
+      line-height: 1.25;
+    }
+
+    .inst-card-strings {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.52rem;
+      letter-spacing: 0.06em;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    /* Panel footer */
+    .inst-panel-footer {
+      padding: 0.6rem 1.25rem;
+      border-top: 1px solid rgba(196,185,154,0.15);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.48rem;
+      letter-spacing: 0.07em;
+      color: rgba(196,185,154,0.3);
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    /* click-hint bar below the map+panel block */
+    .click-hint-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-top: 0.6rem;
+      padding: 0 0.1rem;
+    }
+
+    .click-hint-bar span {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--border);
+    }
+
+    .click-hint-bar::before {
+      content: '';
+      display: block;
+      width: 18px;
+      height: 1px;
+      background: var(--gold);
+      flex-shrink: 0;
+    }
+
+    /* ── OVERVIEW TEXT ── */
+    /* Sits below the map block, aligned to full width of it */
+    .viz-overview {
+      margin-top: 2rem;
+    }
+
+    .viz-overview h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: var(--ink);
+    }
+
+    .viz-overview p {
+      font-size: 0.98rem;
+      color: #3d3020;
+      line-height: 1.85;
+    }
+
+    /* ── REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(25px);
+      transition: opacity 0.7s, transform 0.7s;
+    }
+
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--ink);
+      color: var(--border);
+      text-align: center;
+      padding: 2.5rem;
+      border-top: 2px solid var(--gold);
+      position: relative;
+      z-index: 1;
+    }
+
+    footer p {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--border);
+      margin: 0;
+    }
+
+    footer a { color: var(--gold); text-decoration: none; }
+
+    @media (max-width: 820px) {
+      nav { padding: 0 1.5rem; }
+      .nav-links { gap: 1.5rem; }
+      .map-and-panel { flex-direction: column; }
+      .inst-panel { width: 100%; min-width: 0; border-left: none; border-top: 1px solid var(--gold); }
+      .toc { padding: 1rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="index.html">String Instrument Atlas</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="dataset.html">Dataset</a></li>
+    <li><a href="visualizations.html" class="active">Visualizations</a></li>
+    <li><a href="bibliography.html">Bibliography</a></li>
+  </ul>
+</nav>
+
+<div class="page-header">
+  <span class="overline">Data Visualizations</span>
+  <h1>Patterns in<br/><em>Global String Instruments</em></h1>
+  <p>Three interactive Tableau visualizations exploring instrument properties, geographic distribution, and cross-cultural patterns in the dataset.</p>
+</div>
+
+<div class="toc">
+  <span class="toc-label">Jump to —</span>
+  <a href="#viz1">I. String Distribution</a>
+  <a href="#viz2">II. South America Instrument Properties</a>
+  <a href="#viz3">III. World Instrument Numbers</a>
+</div>
+
+<main class="viz-page">
+
+  <!-- ── VIZ 1 ── -->
+  <div class="viz-block" id="viz1">
+    <div class="viz-inner">
+
+      <div class="viz-meta reveal">
+        <div class="viz-num">I</div>
+        <div class="viz-head">
+          <h2>String Count <em>Distribution</em><br/>Across Regions</h2>
+        </div>
+      </div>
+
+      <div class="reveal">
+        <!-- MAP + PANEL -->
+        <div class="map-and-panel">
+          <!-- Tableau viz 1 -->
+          <div class="tableau-wrap">
+            <div class='tableauPlaceholder' id='viz1773085230983' style='position:relative;width:100%;'>
+              <noscript><a href='#'><img alt='Average Instrument String Amount by Country' src='https://public.tableau.com/static/images/IN/INSTRUMENTDATA/Sheet1/1_rss.png' style='border:none'/></a></noscript>
+              <object class='tableauViz' style='display:none;'>
+                <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' />
+                <param name='embed_code_version' value='3' />
+                <param name='path' value='views&#47;INSTRUMENTDATA&#47;Sheet1?:language=en-US&amp;:embed=true&amp;publish=yes&amp;:sid=&amp;:redirect=auth' />
+                <param name='toolbar' value='yes' />
+                <param name='static_image' value='https://public.tableau.com/static/images/IN/INSTRUMENTDATA/Sheet1/1.png' />
+                <param name='animate_transition' value='yes' />
+                <param name='display_static_image' value='yes' />
+                <param name='display_spinner' value='yes' />
+                <param name='display_overlay' value='yes' />
+                <param name='display_count' value='yes' />
+                <param name='language' value='en-US' />
+                <param name='filter' value='publish=yes' />
+              </object>
+            </div>
+          </div>
+          <!-- Panel 1 -->
+          <aside class="inst-panel" id="panel1">
+            <div class="inst-panel-head">
+              <div class="inst-panel-label">Selected Country</div>
+              <div class="inst-country-name" id="country1">—</div>
+              <div class="inst-count" id="count1"></div>
+            </div>
+            <div class="inst-empty" id="empty1">
+              <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+                <circle cx="19" cy="19" r="16" stroke="#c8922a" stroke-width="1.2"/>
+                <path d="M12 19 Q15.5 12.5 19 19 Q22.5 25.5 26 19" stroke="#c8922a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+                <line x1="19" y1="5"  x2="19" y2="8"  stroke="#c8922a" stroke-width="1.2" stroke-linecap="round"/>
+                <line x1="19" y1="30" x2="19" y2="33" stroke="#c8922a" stroke-width="1.2" stroke-linecap="round"/>
+                <line x1="5"  y1="19" x2="8"  y2="19" stroke="#c8922a" stroke-width="1.2" stroke-linecap="round"/>
+                <line x1="30" y1="19" x2="33" y2="19" stroke="#c8922a" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+              <p id="empty1msg">Click a country<br/>to explore its<br/>instruments</p>
+            </div>
+            <div class="inst-list" id="list1" style="display:none;"></div>
+            <div class="inst-panel-footer">stringedinstrumentdatabase.aornis.com</div>
+          </aside>
+        </div>
+
+        <div class="click-hint-bar">
+          <span>Click any country on the map to reveal its instruments</span>
+        </div>
+
+        <!-- Overview text — full width of the map+panel block -->
+        <div class="viz-overview">
+          <h3>Overview</h3>
+          <p>The map visualization of string instruments reveals clear regional patterns in the number of strings. South America shows a notably higher density of instruments with more strings, reflecting the rich tradition of multi-stringed folk instruments like charangos, bandurrias, and vihuelas. Europe also exhibits a high string density, likely due to classical and traditional instruments such as lutes, mandolins, and harps, which frequently have multiple courses and strings. In contrast, Asia shows generally fewer strings per instrument, suggesting a prevalence of simpler stringed instruments or those with fewer courses, such as some variants of the sitar, guqin, or erhu. These patterns highlight how cultural, historical, and musical practices influence instrument design across different regions.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── VIZ 2 ── -->
+  <div class="viz-block" id="viz2">
+    <div class="viz-inner">
+
+      <div class="viz-meta reveal">
+        <div class="viz-num">II</div>
+        <div class="viz-head">
+          <h2>South American<br/><em>Instrument Properties</em></h2>
+        </div>
+      </div>
+
+      <div class="reveal">
+        <div class="map-and-panel">
+          <!-- Tableau viz 2 -->
+          <div class="tableau-wrap">
+            <div class='tableauPlaceholder' id='viz1773085831054' style='position:relative;width:100%;'>
+              <noscript><a href='#'><img alt='South America: Instrument Properties' src='https://public.tableau.com/static/images/IN/INSTRUMENTDATA2/Sheet2/1_rss.png' style='border:none'/></a></noscript>
+              <object class='tableauViz' style='display:none;'>
+                <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' />
+                <param name='embed_code_version' value='3' />
+                <param name='site_root' value='' />
+                <param name='name' value='INSTRUMENTDATA2&#47;Sheet2' />
+                <param name='tabs' value='no' />
+                <param name='toolbar' value='yes' />
+                <param name='static_image' value='https://public.tableau.com/static/images/IN/INSTRUMENTDATA2/Sheet2/1.png' />
+                <param name='animate_transition' value='yes' />
+                <param name='display_static_image' value='yes' />
+                <param name='display_spinner' value='yes' />
+                <param name='display_overlay' value='yes' />
+                <param name='display_count' value='yes' />
+                <param name='language' value='en-US' />
+                <param name='filter' value='publish=yes' />
+              </object>
+            </div>
+          </div>
+          <!-- Panel 2 -->
+          <aside class="inst-panel" id="panel2">
+            <div class="inst-panel-head">
+              <div class="inst-panel-label">Selected Country</div>
+              <div class="inst-country-name" id="country2">—</div>
+              <div class="inst-count" id="count2"></div>
+            </div>
+            <div class="inst-empty" id="empty2">
+              <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+                <circle cx="19" cy="19" r="16" stroke="#c8922a" stroke-width="1.2"/>
+                <path d="M12 19 Q15.5 12.5 19 19 Q22.5 25.5 26 19" stroke="#c8922a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+                <line x1="19" y1="5"  x2="19" y2="8"  stroke="#c8922a" stroke-width="1.2" stroke-linecap="round"/>
+                <line x1="19" y1="30" x2="19" y2="33" stroke="#c8922a" stroke-width="1.2" stroke-linecap="round"/>
+                <line x1="5"  y1="19" x2="8"  y2="19" stroke="#c8922a" stroke-width="1.2" stroke-linecap="round"/>
+                <line x1="30" y1="19" x2="33" y2="19" stroke="#c8922a" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+              <p id="empty2msg">Click a country<br/>to explore its<br/>instruments</p>
+            </div>
+            <div class="inst-list" id="list2" style="display:none;"></div>
+            <div class="inst-panel-footer">stringedinstrumentdatabase.aornis.com</div>
+          </aside>
+        </div>
+
+        <div class="click-hint-bar">
+          <span>Click any country on the map to reveal its instruments</span>
+        </div>
+
+        <div class="viz-overview">
+          <h3>Overview</h3>
+          <p>This map focuses on South American string instruments, visualizing their structural and acoustic properties by country or region. It highlights that while many instruments share a similar number of courses, the number of strings varies more widely, suggesting different approaches to instrument construction even within similar frameworks. Additionally, the map shows a high diversity of tuning patterns, which tends to increase with instruments that have more strings. This suggests that luthiers in South America explore multiple tonal possibilities, creating rich variation in sound while maintaining consistent course structures. Overall, the visualization underscores regional experimentation and innovation, revealing how culture, tradition, and musical needs influence the physical and acoustic properties of instruments across South America.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── VIZ 3 ── -->
+  <div class="viz-block" id="viz3">
+    <div class="viz-inner">
+
+      <div class="viz-meta reveal">
+        <div class="viz-num">III</div>
+        <div class="viz-head">
+          <h2>World Instruments<br/><em>per Country</em></h2>
+        </div>
+      </div>
+
+      <div class="reveal">
+        <div class="map-and-panel">
+          <!-- Tableau viz 3 -->
+          <div class="tableau-wrap">
+            <div class='tableauPlaceholder' id='viz1773085886449' style='position:relative;width:100%;'>
+              <noscript><a href='#'><img alt='World: Number of Instruments per Country' src='https://public.tableau.com/static/images/IN/INSTRUMENTDATA3/Sheet3/1_rss.png' style='border:none'/></a></noscript>
+              <object class='tableauViz' style='display:none;'>
+                <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' />
+                <param name='embed_code_version' value='3' />
+                <param name='site_root' value='' />
+                <param name='name' value='INSTRUMENTDATA3&#47;Sheet3' />
+                <param name='tabs' value='no' />
+                <param name='toolbar' value='yes' />
+                <param name='static_image' value='https://public.tableau.com/static/images/IN/INSTRUMENTDATA3/Sheet3/1.png' />
+                <param name='animate_transition' value='yes' />
+                <param name='display_static_image' value='yes' />
+                <param name='display_spinner' value='yes' />
+                <param name='display_overlay' value='yes' />
+                <param name='display_count' value='yes' />
+                <param name='language' value='en-US' />
+                <param name='filter' value='publish=yes' />
+              </object>
+            </div>
+          </div>
+          <!-- Panel 3 -->
+          <aside class="inst-panel" id="panel3">
+            <div class="inst-panel-head">
+              <div class="inst-panel-label">Selected Country</div>
+              <div class="inst-country-name" id="country3">—</div>
+              <div class="inst-count" id="count3"></div>
+            </div>
+            <div class="inst-empty" id="empty3">
+              <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+                <circle cx="19" cy="19" r="16" stroke="#c8922a" stroke-width="1.2"/>
+                <path d="M12 19 Q15.5 12.5 19 19 Q22.5 25.5 26 19" stroke="#c8922a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+                <line x1="19" y1="5"  x2="19" y2="8"  stroke="#c8922a" stroke-width="1.2" stroke-linecap="round"/>
+                <line x1="19" y1="30" x2="19" y2="33" stroke="#c8922a" stroke-width="1.2" stroke-linecap="round"/>
+                <line x1="5"  y1="19" x2="8"  y2="19" stroke="#c8922a" stroke-width="1.2" stroke-linecap="round"/>
+                <line x1="30" y1="19" x2="33" y2="19" stroke="#c8922a" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+              <p id="empty3msg">Click a country<br/>to explore its<br/>instruments</p>
+            </div>
+            <div class="inst-list" id="list3" style="display:none;"></div>
+            <div class="inst-panel-footer">stringedinstrumentdatabase.aornis.com</div>
+          </aside>
+        </div>
+
+        <div class="click-hint-bar">
+          <span>Click any country on the map to reveal its instruments</span>
+        </div>
+
+        <div class="viz-overview">
+          <h3>Overview</h3>
+          <p>This map visualizes the number of string instruments documented per country, highlighting areas with higher instrument diversity. South America and Europe show a higher concentration of instruments, suggesting strong musical traditions and rich lutherie practices. In contrast, many countries in Asia and Africa have fewer documented instruments, which could reflect less available data or differing regional musical practices. This distribution helps identify cultural hubs for string instrument development and provides insight into where certain instrument families are more prevalent, allowing for comparisons across continents and emphasizing the global diversity of stringed music traditions.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <p>
+    Global Instrument Atlas &nbsp;·&nbsp; A Digital Humanities Project &nbsp;·&nbsp;
+    <a href="index.html">Home</a> &nbsp;·&nbsp;
+    <a href="bibliography.html">Bibliography</a>
+  </p>
+</footer>
+
+<!-- ── Tableau embed scripts ── -->
+<script type='text/javascript'>
+  // Viz 1
+  (function(){
+    var d = document.getElementById('viz1773085230983');
+    var o = d.getElementsByTagName('object')[0];
+    o.style.width  = '100%';
+    o.style.height = (d.offsetWidth * 0.75) + 'px';
+    var s = document.createElement('script');
+    s.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';
+    o.parentNode.insertBefore(s, o);
+  })();
+
+  // Viz 2
+  (function(){
+    var d = document.getElementById('viz1773085831054');
+    var o = d.getElementsByTagName('object')[0];
+    o.style.width  = '100%';
+    o.style.height = (d.offsetWidth * 0.75) + 'px';
+    var s = document.createElement('script');
+    s.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';
+    o.parentNode.insertBefore(s, o);
+  })();
+
+  // Viz 3
+  (function(){
+    var d = document.getElementById('viz1773085886449');
+    var o = d.getElementsByTagName('object')[0];
+    o.style.width  = '100%';
+    o.style.height = (d.offsetWidth * 0.75) + 'px';
+    var s = document.createElement('script');
+    s.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';
+    o.parentNode.insertBefore(s, o);
+  })();
+</script>
+
+<script>
+// ── Instrument data ──────────────────────────────────────────────────────────
+const BASE = 'https://stringedinstrumentdatabase.aornis.com/images/';
+
+const INSTRUMENTS = [
+  {name:'Agach Kumuz',img:'agach_kumuz',strings:2.5,countries:['Georgia']},
+  {name:'Agiarut',img:'agiarut',strings:2,countries:['Canada']},
+  {name:'Ahenk',img:'ahenk',strings:12,countries:['Turkey']},
+  {name:'Ajayu',img:'ajayu',strings:12,countries:['Chile']},
+  {name:'Akkordolia',img:'akkordolia',strings:8,countries:['Germany','Japan']},
+  {name:'Akonting',img:'akonting',strings:3.5,countries:['Senegal']},
+  {name:'Apkhyarta',img:'apkhyarta',strings:1.67,countries:['Georgia','Russia']},
+  {name:'Armonico',img:'armonico',strings:7,countries:['Cuba']},
+  {name:'Arpeggione',img:'arpeggione',strings:6,countries:['Austria']},
+  {name:'Baglamas',img:'baglamas',strings:6,countries:['Greece','Turkey']},
+  {name:'Bajo Sexto',img:'bajo_sexto',strings:12,countries:['Mexico']},
+  {name:'Balalaika',img:'balalaika',strings:4.5,countries:['Russia']},
+  {name:'Bandol',img:'bandol',strings:8,countries:['Trinidad and Tobago']},
+  {name:'Bandola Andina Colombiana',img:'bandola_andina_colombiana',strings:16,countries:['Colombia']},
+  {name:'Bandola Aymara',img:'bandola_aymara',strings:14,countries:['Chile']},
+  {name:'Bandola Bajo',img:'bandola_bajo',strings:10,countries:['Colombia']},
+  {name:'Bandola Central',img:'bandola_central',strings:8,countries:['Venezuela']},
+  {name:'Bandola Llanera',img:'bandola_llanera',strings:4,countries:['Venezuela']},
+  {name:'Bandola Oriental',img:'bandola_oriental',strings:8,countries:['Venezuela']},
+  {name:'Bandolin',img:'bandolin',strings:15,countries:['Ecuador']},
+  {name:'Bandolon',img:'bandolon',strings:15,countries:['Mexico']},
+  {name:'Bandurria',img:'bandurria',strings:12,countries:['Spain']},
+  {name:'Bandurria Marimacho',img:'bandurria_marimacho',strings:12,countries:['Peru']},
+  {name:'Bandurria, Peruvian',img:'bandurria_peruvian',strings:14,countries:['Peru','Bolivia']},
+  {name:'Bandurria, Philippine',img:'bandurria_philippine',strings:14,countries:['Philippines']},
+  {name:'Banjo',img:'banjo',strings:4.5,countries:['USA']},
+  {name:'Banjo, Cello',img:'banjo_cello',strings:4.5,countries:['USA']},
+  {name:'Banjo, Tenor',img:'banjo_tenor',strings:4,countries:['USA']},
+  {name:'Banjola',img:'banjola',strings:5,countries:['USA']},
+  {name:'Barbat',img:'barbat',strings:10,countries:['Iran']},
+  {name:'Basolia',img:'basolia',strings:4,countries:['Ukraine']},
+  {name:'Berda',img:'berda',strings:4,countries:['Croatia','Serbia','Slovenia']},
+  {name:'Berimbau',img:'berimbau',strings:1,countries:['Brazil']},
+  {name:'Bisernica',img:'bisernica',strings:6.33,countries:['Croatia','Serbia','Slovenia']},
+  {name:'Biwa',img:'biwa',strings:4.5,countries:['Japan']},
+  {name:'Bordonua',img:'bordonua',strings:10,countries:['Puerto Rico']},
+  {name:'Bouzouki',img:'bouzouki',strings:7,countries:['Greece']},
+  {name:'Bouzouki, Irish',img:'bouzouki_irish',strings:8,countries:['Ireland']},
+  {name:'Brac',img:'brac',strings:5.5,countries:['Croatia','Serbia','Slovenia']},
+  {name:'Braguinha',img:'braguinha',strings:4,countries:['Portugal']},
+  {name:'Bugarija',img:'bugarija',strings:5.5,countries:['Croatia','Serbia','Slovenia']},
+  {name:'Bulbul Tarang',img:'bulbul_tarang',strings:null,countries:['India','Pakistan','Japan']},
+  {name:'Buzuq',img:'buzuq',strings:6,countries:['Lebanon','Greece','Turkey']},
+  {name:'Cak',img:'cak',strings:4,countries:['Indonesia']},
+  {name:'Cavaquinho',img:'cavaquinho',strings:4,countries:['Portugal']},
+  {name:'Cavaquinho, Brazilian',img:'cavaquinho_brazilian',strings:4,countries:['Brazil','Portugal']},
+  {name:'Cello',img:'cello',strings:4,countries:['Italy']},
+  {name:'Chanzy',img:'chanzy',strings:3,countries:['Russia']},
+  {name:'Chapey',img:'chapey',strings:3,countries:['Thailand','Cambodia']},
+  {name:'Chitarra Battente',img:'chitarra_battente',strings:10,countries:['Peru']},
+  {name:'Chonguri',img:'chonguri',strings:4,countries:['Italy']},
+  {name:'Chuniri',img:'chuniri',strings:3,countries:['Georgia']},
+  {name:'Ciftelia',img:'ciftelia',strings:2,countries:['Georgia']},
+  {name:'Cittern',img:'cittern',strings:10,countries:['Venezuela']},
+  {name:'Cumbus',img:'cumbus',strings:12,countries:['Turkey']},
+  {name:'Dan Day',img:'dan_day',strings:3,countries:['Vietnam']},
+  {name:'Dan Nguyet',img:'dan_nguyet',strings:2,countries:['Vietnam']},
+  {name:'Dan Sen',img:'dan_sen',strings:2,countries:['Vietnam']},
+  {name:'Dan Tu',img:'dan_tu',strings:4,countries:['Vietnam']},
+  {name:'Dan Ty Ba',img:'dan_ty_ba',strings:4,countries:['Vietnam']},
+  {name:'Dihu',img:'dihu',strings:2,countries:['China']},
+  {name:'Dilruba',img:'dilruba',strings:4,countries:['India']},
+  {name:'Domra',img:'domra',strings:3,countries:['Russia']},
+  {name:'Domra (Ukrainian)',img:'domra',strings:4,countries:['Russia']},
+  {name:'Dombra',img:'dombra',strings:2,countries:['China']},
+  {name:'Dombra, Kalmyk',img:'dombra_kalmyk',strings:2,countries:['Kazakhstan']},
+  {name:'Doshpuluur',img:'doshpuluur',strings:2.5,countries:['Russia']},
+  {name:'Dotar',img:'dotar',strings:2,countries:['Russia']},
+  {name:'Double Bass',img:'double_bass',strings:4,countries:['Italy']},
+  {name:'Dulcimer (Appalachian)',img:'dulcimer',strings:4.33,countries:['India','Bangladesh']},
+  {name:'Ektara',img:'ektara',strings:1,countries:['USA']},
+  {name:'Endingidi',img:'endingidi',strings:1,countries:['Uganda']},
+  {name:'Erhu',img:'erhu',strings:2,countries:['China']},
+  {name:'Esraj',img:'esraj',strings:4,countries:['India']},
+  {name:'Gadulka',img:'gadulka',strings:3,countries:['India']},
+  {name:'Gekkin',img:'gekkin',strings:3.5,countries:['China']},
+  {name:'Guitar',img:'guitar',strings:6,countries:['Spain']},
+  {name:'Guitar, 12-string',img:'guitar_12_string',strings:12,countries:['UK']},
+  {name:'Guitar, Bass',img:'guitar_bass',strings:4,countries:['Spain']},
+  {name:'Guitar, Octave',img:'guitar_octave',strings:6,countries:['Brazil','USA']},
+  {name:'Guitar, Requinto',img:'guitar_requinto',strings:6,countries:['Spain']},
+  {name:'Guitar, Russian',img:'guitar_russian',strings:7,countries:['Russia']},
+  {name:'Guitar, Tenor',img:'guitar_tenor',strings:4,countries:['USA']},
+  {name:'Guitarlele',img:'guitarlele',strings:6,countries:['Japan']},
+  {name:'Guitarra De Golpe',img:'guitarra_de_golpe',strings:5,countries:['Mexico']},
+  {name:'Guitarra Panzona',img:'guitarra_panzona',strings:6,countries:['Mexico']},
+  {name:'Guitarra Portugesa',img:'guitarra_portuguesa',strings:12,countries:['Portugal']},
+  {name:'Guitarra Septima',img:'guitarra_septima',strings:12,countries:['Mexico']},
+  {name:'Guitarrenlaute',img:'guitarrenlaute',strings:6.5,countries:['Germany']},
+  {name:'Guitarro',img:'guitarro',strings:6.5,countries:['Spain']},
+  {name:'Guitarron',img:'guitarron',strings:6,countries:['Mexico']},
+  {name:'Guitarron Argentino',img:'guitarron_argentino',strings:6,countries:['Argentina']},
+  {name:'Guitarron Chileno',img:'guitarron_chileno',strings:24.5,countries:['Chile']},
+  {name:'Guitolao',img:'guitolao',strings:12,countries:['Portugal']},
+  {name:'Guqin',img:'guqin',strings:7,countries:['China']},
+  {name:'Halszither',img:'halszither',strings:9,countries:['Switzerland']},
+  {name:'Hardingfele',img:'hardingfele',strings:4,countries:['Norway']},
+  {name:'Hasapi',img:'hasapi',strings:2,countries:['Malaysia']},
+  {name:'Huapanguera',img:'huapanguera',strings:6.33,countries:['Mexico']},
+  {name:'Huobosi',img:'huobosi',strings:4,countries:['China']},
+  {name:'Ichigenkin',img:'ichigenkin',strings:1.5,countries:['Japan']},
+  {name:'Igil',img:'igil',strings:2,countries:['Russia']},
+  {name:'Imzad',img:'imzad',strings:1,countries:['Niger','Algeria','Mali']},
+  {name:'Jakhay',img:'jakhay',strings:3,countries:['Thailand']},
+  {name:'Jarana Huasteca',img:'jarana_huasteca',strings:5,countries:['Mexico']},
+  {name:'Jarana Jarocha',img:'jarana_jarocha',strings:8,countries:['Mexico']},
+  {name:'Jarana Jarocha Requinto',img:'jarana_jarocha_requinto',strings:4.5,countries:['Mexico']},
+  {name:'Jarana Leona',img:'jarana_leona',strings:4,countries:['Mexico']},
+  {name:'Jouhikko',img:'jouhikko',strings:3,countries:['Finland']},
+  {name:'Junga',img:'junga',strings:2,countries:['Indonesia']},
+  {name:'Kabosy',img:'kabosy',strings:5.33,countries:['Madagascar']},
+  {name:'Kamancheh',img:'kamancheh',strings:3.5,countries:['Iran']},
+  {name:'Kamayacha',img:'kamayacha',strings:null,countries:['India']},
+  {name:'Khonkhota',img:'khonkhota',strings:9,countries:['Bolivia']},
+  {name:'Kobza',img:'kobza',strings:7.33,countries:['Ukraine']},
+  {name:'Kokyu',img:'kokyu',strings:3.5,countries:['Japan']},
+  {name:'Komuz',img:'komuz',strings:3,countries:['Kyrgyzstan']},
+  {name:'Kudyapi',img:'kudyapi',strings:2,countries:['Philippines']},
+  {name:'Kwitra',img:'kwitra',strings:8,countries:['Algeria']},
+  {name:'Kyl Kiak',img:'kyl_kiak',strings:2,countries:['Kyrgyzstan']},
+  {name:'Langeleik',img:'langeleik',strings:4.43,countries:['Norway']},
+  {name:'Langspil',img:'langspil',strings:3.5,countries:['Iceland']},
+  {name:'Laouto',img:'laouto',strings:8,countries:['Greece']},
+  {name:'Laud',img:'laud',strings:12,countries:['Spain']},
+  {name:'Laud, Cuban',img:'laud_cuban',strings:12,countries:['Cuba']},
+  {name:'Laud, Philippine',img:'laud_philippine',strings:14,countries:['Philippines']},
+  {name:'Lavta',img:'lavta',strings:7,countries:['Turkey','Greece','Armenia']},
+  {name:'Liuqin',img:'liuqin',strings:3.5,countries:['China']},
+  {name:'Liuto cantabile',img:'liuto_cantabile',strings:10,countries:['Italy']},
+  {name:'Lotar',img:'lotar',strings:4,countries:['Morocco']},
+  {name:'Lyra',img:'lyra',strings:3,countries:['Greece']},
+  {name:'Lyra, Calabrian',img:'lyra_calabrian',strings:3,countries:['Italy']},
+  {name:'Mandobass',img:'mandobass',strings:4,countries:['UK']},
+  {name:'Mandocello',img:'mandocello',strings:8,countries:['Italy']},
+  {name:'Mandola, Octave',img:'mandola_octave',strings:8,countries:['Italy']},
+  {name:'Mandola, Tenor',img:'mandola_tenor',strings:8,countries:['Italy']},
+  {name:'Mandolin',img:'mandolin',strings:8,countries:['Italy']},
+  {name:'Mandolinetto',img:'mandolinetto',strings:8,countries:['USA','Canada']},
+  {name:'Mandolin, Piccolo',img:'mandolin_piccolo',strings:8,countries:['Italy']},
+  {name:'Mandriola',img:'mandriola',strings:12,countries:['Italy']},
+  {name:'Manguerito',img:'manguerito',strings:7,countries:['Bolivia']},
+  {name:'Masinko',img:'masinko',strings:1,countries:['Ethiopia']},
+  {name:'Mejoranera',img:'mejoranera',strings:5,countries:['Panama']},
+  {name:'Mohan Veena',img:'mohan_veena',strings:8,countries:['India']},
+  {name:'Mondol',img:'mondol',strings:9,countries:['Algeria']},
+  {name:'Morin Khur',img:'morin_khur',strings:2,countries:['Mongolia']},
+  {name:'Njarka',img:'njarka',strings:1,countries:['Mali']},
+  {name:'Nyckelharpa',img:'nyckelharpa',strings:4,countries:['Sweden']},
+  {name:'Octavina',img:'octavina',strings:14,countries:['Philippines']},
+  {name:'Octobass',img:'octobass',strings:3,countries:['France']},
+  {name:'Octofone',img:'octofone',strings:8,countries:['USA']},
+  {name:'Oud Arbi',img:'oud_arbi',strings:8,countries:['Tunisia','Morocco','Algeria']},
+  {name:'Oud Bashir',img:'oud_bashir',strings:11.5,countries:['Iraq']},
+  {name:'Orutu',img:'orutu',strings:1,countries:['Kenya']},
+  {name:'Panduri',img:'panduri',strings:3,countries:['Georgia']},
+  {name:'Phin',img:'phin',strings:3,countries:['Thailand','Laos']},
+  {name:'Phin Pia',img:'phin_pia',strings:2,countries:['Thailand']},
+  {name:'Pipa',img:'pipa',strings:4,countries:['China']},
+  {name:'Qinqin',img:'qinqin',strings:3,countries:['China']},
+  {name:'Rabel',img:'rabel',strings:2.5,countries:['Spain']},
+  {name:'Rabeca',img:'rabeca',strings:3.5,countries:['Brazil','USA']},
+  {name:'Rajao',img:'rajao',strings:5.5,countries:['Portugal']},
+  {name:'Rawap',img:'rawap',strings:5,countries:['China']},
+  {name:'Rebab',img:'rebab',strings:4.33,countries:['Iran']},
+  {name:'Rebab (Indonesian)',img:'rebab',strings:2,countries:['Indonesia']},
+  {name:'Ronroco',img:'ronroco',strings:10,countries:['Peru']},
+  {name:'Ruan',img:'ruan',strings:4,countries:['China']},
+  {name:'Sape',img:'sape',strings:null,countries:['Indonesia']},
+  {name:'Sanshin',img:'sanshin',strings:3,countries:['Japan']},
+  {name:'Sanshin, Kankara',img:'sanshin_kankara',strings:3,countries:['Japan']},
+  {name:'Sanxian',img:'sanxian',strings:3,countries:['China']},
+  {name:'Sarangi (Indian)',img:'sarangi',strings:3.5,countries:['India']},
+  {name:'Sarangi (Nepalese)',img:'sarangi_nepalese',strings:3.5,countries:['Nepal']},
+  {name:'Sargija',img:'sargija',strings:6,countries:['Bosnia and Herzegovina']},
+  {name:'Sarinda',img:'sarinda',strings:3,countries:['Bangladesh']},
+  {name:'Sarod',img:'sarod',strings:4,countries:['India']},
+  {name:'Sachaguitarra',img:'sachaguitarra',strings:5,countries:['Argentina']},
+  {name:'Sato',img:'sato',strings:4.5,countries:['Tajikistan','Uzbekistan']},
+  {name:'Saw Sam Sai',img:'saw_sam_sai',strings:3,countries:['Thailand']},
+  {name:'Saz',img:'saz',strings:6.5,countries:['Turkey']},
+  {name:'Setar',img:'setar',strings:4,countries:['Iran']},
+  {name:'Shamisen',img:'shamisen',strings:3,countries:['Japan']},
+  {name:'Sirincho',img:'sirincho',strings:6,countries:['Mexico']},
+  {name:'Sitar',img:'sitar',strings:7,countries:['India']},
+  {name:'Socavon',img:'socavon',strings:4,countries:['Panama']},
+  {name:'Sohaegeum',img:'sohaegeum',strings:4,countries:['North Korea']},
+  {name:'Strumstick',img:'strumstick',strings:3.5,countries:['USA']},
+  {name:'Subu',img:'subu',strings:3,countries:['Thailand']},
+  {name:'Sueng',img:'sueng',strings:4,countries:['Thailand']},
+  {name:'Sundatang',img:'sundatang',strings:null,countries:['Malaysia']},
+  {name:'Surbahar',img:'surbahar',strings:null,countries:['India']},
+  {name:'Sursringar',img:'sursringar',strings:null,countries:['India']},
+  {name:'Suuk Khuur',img:'suukh_khuur',strings:1.5,countries:['Mongolia']},
+  {name:'Tai Neua',img:'tai_neua',strings:3,countries:['Laos']},
+  {name:'Talharpa',img:'talharpa',strings:3,countries:['Estonia','Sweden']},
+  {name:'Tambura',img:'tambura',strings:8,countries:['Bulgaria']},
+  {name:'Tambura, Macedonian',img:'tambura_macedonian',strings:4,countries:['Macedonia']},
+  {name:'Tanbur (Turkish)',img:'tanbur',strings:8,countries:['Turkey']},
+  {name:'Tar',img:'tar',strings:5,countries:['Iran']},
+  {name:'Tar, Azeri',img:'tar_azeri',strings:11,countries:['Azerbaijan']},
+  {name:'Tarhu',img:'tarhu',strings:5,countries:['Australia']},
+  {name:'Timple',img:'timple',strings:5,countries:['Spain']},
+  {name:'Tiple',img:'tiple',strings:12,countries:['Colombia']},
+  {name:'Tiple (American)',img:'tiple_american',strings:10,countries:['USA']},
+  {name:'Tiple de Menorca',img:'tiple_de_menorca',strings:5,countries:['Spain']},
+  {name:'Tiple Doliente',img:'tiple_doliente',strings:5,countries:['Puerto Rico']},
+  {name:'Tiple Grande De Ponce',img:'tiple_grande_de_ponce',strings:5,countries:['Puerto Rico']},
+  {name:'Tiple Requinto',img:'tiple_requinto',strings:11,countries:['Colombia']},
+  {name:'Tiple Requinto Costero',img:'tiple_requinto_costero',strings:3,countries:['Puerto Rico']},
+  {name:'Tiple Requinto De Montana',img:'tiple_requinto_de_montana',strings:3,countries:['Puerto Rico']},
+  {name:'Tiple Vihuela',img:'tiple_vihuela',strings:10,countries:['Puerto Rico']},
+  {name:'Tiplon Con Macho',img:'tiplon_con_macho',strings:4.5,countries:['Puerto Rico']},
+  {name:'Tres',img:'tres',strings:6,countries:['Cuba']},
+  {name:'Tres, Puerto Rican',img:'tres_puerto_rican',strings:9,countries:['Puerto Rico']},
+  {name:'Tricordia',img:'tricordia',strings:12,countries:['Mexico']},
+  {name:'Tzouras',img:'tzouras',strings:6,countries:['Greece']},
+  {name:'Tungana',img:'tungana',strings:4,countries:['Nepal','Bhutan']},
+  {name:'Ukulele',img:'ukulele',strings:4,countries:['Hawaii']},
+  {name:'Ukulele, Bass',img:'ukulele_bass',strings:4,countries:['USA']},
+  {name:'Ukulele, Tahitian',img:'ukulele_tahitian',strings:8,countries:['Tahiti']},
+  {name:'Ukulele, Taropatch',img:'ukulele_taropatch',strings:8,countries:['Hawaii']},
+  {name:'Vihuela',img:'vihuela',strings:5,countries:['Mexico']},
+  {name:'Veena, Saraswati',img:'veena_saraswati',strings:4,countries:['India']},
+  {name:'Viol',img:'viol',strings:6,countries:['Italy']},
+  {name:'Viola',img:'viola',strings:4,countries:['Portugal']},
+  {name:'Viola Amarantina',img:'viola_amarantina',strings:10,countries:['Portugal']},
+  {name:'Viola Beiroa',img:'viola_beiroa',strings:11,countries:['Portugal']},
+  {name:'Viola Braguesa',img:'viola_braguesa',strings:10,countries:['Brazil']},
+  {name:'Viola Caipira',img:'viola_caipira',strings:10,countries:['Brazil']},
+  {name:'Viola Campanica',img:'viola_campanica',strings:10,countries:['Portugal']},
+  {name:'Viola Da Terra',img:'viola_da_terra',strings:12,countries:['Portugal']},
+  {name:'Viola De Arame',img:'viola_de_arame',strings:9,countries:['Portugal']},
+  {name:'Viola De Buriti',img:'viola_de_buriti',strings:4,countries:['Brazil']},
+  {name:'Viola De Cocho',img:'viola_de_cocho',strings:5,countries:['Brazil']},
+  {name:'Viola De Queluz',img:'viola_de_queluz',strings:12,countries:['Brazil']},
+  {name:'Viola Sertaneja',img:'viola_sertaneja',strings:10,countries:['Brazil']},
+  {name:'Viola Terceira',img:'viola_terceira',strings:15,countries:['Portugal']},
+  {name:'Viola Toeira',img:'viola_toeira',strings:12,countries:['Portugal']},
+  {name:'Violao De Sete Cordas',img:'violao_de_sete_cordas',strings:7,countries:['Brazil']},
+  {name:'Violin',img:'violin',strings:4,countries:['Italy']},
+  {name:'Walaycho',img:'walaycho',strings:8,countries:['Bolivia']},
+  {name:'Waldzither',img:'waldzither',strings:9,countries:['Germany']},
+  {name:'Yayli Tambur',img:'yayli_tambur',strings:6,countries:['Turkey']},
+  {name:'Yueqin',img:'yueqin',strings:4,countries:['China']},
+  {name:'Yueqin, Taiwanese',img:'yueqin_taiwanese',strings:2.5,countries:['Taiwan']},
+];
+
+// Country lookup
+const CMAP = {};
+INSTRUMENTS.forEach(inst => {
+  inst.countries.forEach(c => {
+    const k = c.toLowerCase();
+    if (!CMAP[k]) CMAP[k] = [];
+    CMAP[k].push(inst);
+  });
+});
+
+// ── Panel rendering ──────────────────────────────────────────────────────────
+function clearPanel(n) {
+  document.getElementById('country'+n).textContent = '—';
+  document.getElementById('count'+n).textContent = '';
+  document.getElementById('empty'+n).style.display = 'flex';
+  document.getElementById('empty'+n+'msg').textContent = 'Click a country\nto explore its\ninstruments';
+  document.getElementById('list'+n).style.display = 'none';
+}
+
+function showPanel(n, country) {
+  document.getElementById('country'+n).textContent = country;
+  const key = country.toLowerCase().trim();
+  const results = CMAP[key] || [];
+  const listEl  = document.getElementById('list'+n);
+  const emptyEl = document.getElementById('empty'+n);
+  const countEl = document.getElementById('count'+n);
+
+  if (!results.length) {
+    countEl.textContent = 'No instruments in dataset';
+    emptyEl.style.display = 'flex';
+    document.getElementById('empty'+n+'msg').textContent = 'No instruments found\nfor this country.';
+    listEl.style.display = 'none';
+    return;
+  }
+
+  countEl.textContent = results.length === 1 ? '1 instrument' : results.length + ' instruments';
+  emptyEl.style.display = 'none';
+  listEl.style.display  = 'flex';
+  listEl.innerHTML = '';
+
+  results.forEach((inst, i) => {
+    const card = document.createElement('div');
+    card.className = 'inst-card';
+    card.style.animationDelay = Math.min(i, 8) * 0.04 + 's';
+
+    const strLabel = inst.strings != null
+      ? inst.strings + ' string' + (inst.strings !== 1 ? 's' : '')
+      : 'strings vary';
+
+    card.innerHTML =
+      '<div class="inst-img-wrap">' +
+        '<img src="' + BASE + inst.img + '.jpg" alt="' + inst.name + '"' +
+          ' onerror="this.outerHTML=\'<div class=\\"inst-img-placeholder\\">♩</div>\'">' +
+      '</div>' +
+      '<div class="inst-card-body">' +
+        '<div class="inst-card-name">' + inst.name + '</div>' +
+        '<div class="inst-card-strings">' + strLabel + '</div>' +
+      '</div>';
+
+    listEl.appendChild(card);
+  });
+}
+
+// ── Tableau listener setup ───────────────────────────────────────────────────
+// Maps each viz div ID → panel number
+const VIZ_MAP = {
+  'viz1773085230983': '1',
+  'viz1773085831054': '2',
+  'viz1773085886449': '3',
+};
+
+function attachVizListener(viz, panelNum) {
+  viz.addEventListener(
+    window.tableau.TableauEventName.MARKS_SELECTION,
+    function(e) {
+      e.getMarksAsync().then(function(marks) {
+        if (!marks || !marks.length) { clearPanel(panelNum); return; }
+        const pairs = marks[0].getPairs();
+        let country = null;
+        const preferred = ['country','country/region','name','country name'];
+        for (const p of pairs) {
+          const fn = (p.fieldName || '').toLowerCase();
+          if (preferred.some(pref => fn.includes(pref))) { country = p.formattedValue; break; }
+        }
+        if (!country && pairs.length) country = pairs[0].formattedValue;
+        if (country) showPanel(panelNum, country);
+      });
+    }
+  );
+}
+
+function initAllVizzes() {
+  if (!window.tableau || !window.tableau.VizManager) return false;
+  const vizzes = window.tableau.VizManager.getVizs();
+  if (!vizzes || !vizzes.length) return false;
+
+  vizzes.forEach(function(viz) {
+    try {
+      const url   = viz.getUrl ? viz.getUrl() : '';
+      const divId = viz.getParentElement ? viz.getParentElement().id : '';
+      const num   = VIZ_MAP[divId];
+      if (num) attachVizListener(viz, num);
+    } catch(e) {}
+  });
+  return true;
+}
+
+let attempts = 0;
+const poll = setInterval(function() {
+  attempts++;
+  if (initAllVizzes() || attempts > 60) clearInterval(poll);
+}, 500);
+
+// ── Reveal on scroll ─────────────────────────────────────────────────────────
+const observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.08 });
+
+document.querySelectorAll('.reveal').forEach(function(el) { observer.observe(el); });
+</script>
+
+</body>
+</html>
